@@ -1,4 +1,6 @@
-# qr2g.it
+<p align="center">
+  <img src="assets/qr2g.it.svg" alt="qr2g.it" width="500">
+</p>
 
 qr2g.it is a backend API for permanent, QR-friendly short links to public GitHub repositories. A link is bound to the GitHub repository identity recorded by GitHub (`node_id` and database id), not just the current `owner/repo` text, so the slug keeps resolving after renames or transfers when verification succeeds.
 
