@@ -19,6 +19,7 @@ var reservedSegments = map[string]struct{}{
 	"favicon.ico": {},
 	".well-known": {},
 	"assets":      {},
+	"_nuxt":       {},
 	"static":      {},
 	"public":      {},
 }
@@ -34,6 +35,9 @@ func (s *Server) handleNoRoute(c *gin.Context) {
 	path := c.Request.URL.Path
 	if path == "" || path == "/" {
 		s.handleRoot(c)
+		return
+	}
+	if s.serveFrontendFile(c, path) {
 		return
 	}
 

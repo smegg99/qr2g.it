@@ -29,7 +29,7 @@ func TestLooksLikeOwnerRepo(t *testing.T) {
 func TestReservedSegments(t *testing.T) {
 	mustBeReserved := []string{
 		"api", "health", "ready", "robots.txt", "favicon.ico",
-		".well-known", "assets", "static", "public",
+		".well-known", "assets", "_nuxt", "static", "public",
 	}
 	for _, s := range mustBeReserved {
 		if _, ok := reservedSegments[s]; !ok {

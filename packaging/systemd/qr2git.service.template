@@ -1,0 +1,17 @@
+[Unit]
+Description=qr2git short-link service
+Documentation=https://github.com/smegg99/qr2g.it
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory={{APP_DIR}}
+EnvironmentFile={{APP_DIR}}/.env
+ExecStart={{APP_DIR}}/{{BINARY_NAME}}
+Restart=on-failure
+RestartSec=5s
+TimeoutStopSec=20s
+
+[Install]
+WantedBy=multi-user.target

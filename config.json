@@ -9,15 +9,8 @@
   },
   "github": {
     "api_version": "2026-03-10",
-    "app_id": 3612331,
-    "graphql_url": "https://api.github.com/graphql",
-    "installation_id": 129806622,
-    "private_key_path": "@{env?:GITHUB_APP_PRIVATE_KEY_PATH}",
     "request_timeout_seconds": 15,
     "rest_base_url": "https://api.github.com",
-    "token_refresh_skew_seconds": 300,
-    "use_app_auth": true,
-    "use_graphql": true,
     "user_agent": "qr2g.it"
   },
   "logger": {
@@ -45,12 +38,12 @@
     "shorthand_per_hour": 5
   },
   "server": {
-    "canonical_base_url": "HTTP://LOCALHOST:9245",
-    "gin_mode": "debug",
+    "canonical_base_url": "HTTPS://QR2G.IT",
+    "gin_mode": "release",
     "idle_timeout_seconds": 60,
-    "listen_addr": ":9245",
+    "listen_addr": "127.0.0.1:8080",
     "max_body_bytes": 4096,
-    "public_base_url": "http://localhost:9245",
+    "public_base_url": "https://qr2g.it",
     "read_header_timeout_seconds": 5,
     "require_shorthand_turnstile": false,
     "service_name": "qr2g.it",
@@ -60,6 +53,8 @@
   },
   "turnstile": {
     "enabled": true,
+    "expected_action": "create_link",
+    "expected_hostname": "qr2g.it",
     "request_timeout_seconds": 5,
     "secret_key": "@{env?:TURNSTILE_SECRET_KEY}",
     "site_key": "@{pubenv?:TURNSTILE_SITE_KEY}",

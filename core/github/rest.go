@@ -13,44 +13,25 @@ import (
 	"time"
 )
 
-// ClientConfig is the static configuration for both the REST and GraphQL
-// client surfaces.
+// ClientConfig is the static configuration for the REST client.
 type ClientConfig struct {
 	UserAgent      string
 	APIVersion     string
 	RESTBaseURL    string
-	GraphQLURL     string
 	RequestTimeout time.Duration
-	UseAppAuth     bool
-	UseGraphQL     bool
 }
 
-// Client makes authenticated calls to the GitHub REST and GraphQL APIs.
-// When UseAppAuth is true and the App is configured, it sends an
-// installation token as a Bearer credential. Otherwise it falls back to
-// unauthenticated requests against public endpoints.
+// Client makes unauthenticated calls to the public GitHub REST API.
 type Client struct {
 	cfg ClientConfig
 	hc  *http.Client
-	app *app
 }
 
 // newClient is the package-internal constructor. External callers use
 // Initialize + Get.
-func newClient(cfg ClientConfig, a *app) *Client {
+func newClient(cfg ClientConfig) *Client {
 	hc := &http.Client{Timeout: cfg.RequestTimeout}
-	return &Client{cfg: cfg, hc: hc, app: a}
-}
-
-// UsesAppAuth reports whether the client will send an installation token.
-func (c *Client) UsesAppAuth() bool {
-	return c.cfg.UseAppAuth && c.app != nil && c.app.IsConfigured()
-}
-
-// UsesGraphQL reports whether the client may use GraphQL for verification.
-// GraphQL requires app auth.
-func (c *Client) UsesGraphQL() bool {
-	return c.cfg.UseGraphQL && c.UsesAppAuth()
+	return &Client{cfg: cfg, hc: hc}
 }
 
 // Errors returned by the GitHub client. Callers map these to HTTP status
@@ -85,8 +66,7 @@ func (c *Client) LookupRepoREST(ctx context.Context, owner, repo string) (Repo, 
 	return c.lookupREST(ctx, url)
 }
 
-// LookupRepoByDatabaseID resolves a repo by its GitHub database id. Used as
-// the verification fallback when GitHub App auth is unavailable.
+// LookupRepoByDatabaseID resolves a repo by its GitHub database id.
 func (c *Client) LookupRepoByDatabaseID(ctx context.Context, id int64) (Repo, error) {
 	url := fmt.Sprintf("%s/repositories/%d",
 		strings.TrimRight(c.cfg.RESTBaseURL, "/"), id)
@@ -98,7 +78,7 @@ func (c *Client) lookupREST(ctx context.Context, url string) (Repo, error) {
 	if err != nil {
 		return Repo{}, fmt.Errorf("build rest req: %w", err)
 	}
-	if err := c.applyAuthAndHeaders(ctx, req); err != nil {
+	if err := c.applyHeaders(req); err != nil {
 		return Repo{}, err
 	}
 
@@ -139,9 +119,6 @@ func (c *Client) lookupREST(ctx context.Context, url string) (Repo, error) {
 		if isRateLimit(resp) {
 			return Repo{}, ErrRateLimited
 		}
-		if c.app != nil {
-			c.app.Reset()
-		}
 		return Repo{}, fmt.Errorf("%w: http %d", ErrAuth, resp.StatusCode)
 	case http.StatusTooManyRequests:
 		return Repo{}, ErrRateLimited
@@ -153,19 +130,12 @@ func (c *Client) lookupREST(ctx context.Context, url string) (Repo, error) {
 	}
 }
 
-func (c *Client) applyAuthAndHeaders(ctx context.Context, req *http.Request) error {
+func (c *Client) applyHeaders(req *http.Request) error {
 	req.Header.Set("Accept", "application/vnd.github+json")
 	req.Header.Set("X-GitHub-Api-Version", c.cfg.APIVersion)
 	req.Header.Set("X-Github-Next-Global-ID", "1")
 	req.Header.Set("User-Agent", c.cfg.UserAgent)
 
-	if c.cfg.UseAppAuth && c.app != nil && c.app.IsConfigured() {
-		tok, err := c.app.Token(ctx)
-		if err != nil {
-			return fmt.Errorf("%w: %v", ErrAuth, err)
-		}
-		req.Header.Set("Authorization", "Bearer "+tok)
-	}
 	return nil
 }
 

@@ -60,7 +60,7 @@ Force plain text from any client with `?format=text`, `?text=1`, or `Accept: tex
 - PostgreSQL reachable through `DATABASE_URL`
 - Optional: `just` for the recipes in `justfile`
 - Optional but recommended: a GitHub App installation for authenticated REST requests and strict GraphQL verification by `node_id`
-- Optional: Cloudflare Turnstile keys for public link creation
+- Cloudflare Turnstile keys for public link creation, unless `turnstile.enabled` is set to `false`
 
 ### Frontend
 
@@ -95,9 +95,9 @@ At minimum, set a local Postgres URL:
 DATABASE_URL=postgres://qr2g:qr2g@localhost:5432/qr2g?sslmode=disable
 ```
 
-The checked-in `config.json` is set up for local development on `:9245`, which matches the Nuxt dev proxy. If you generate a fresh config from `schema/config.cue`, the schema default is `:8080`, so either update `server.listen_addr` or run the frontend with `QR2G_BACKEND_URL`.
+The checked-in `config.json` is production-oriented: it binds the backend to `127.0.0.1:8080`, assumes nginx or another reverse proxy handles public HTTPS, and enforces the production Turnstile hostname. For local testing, use `config.json.dev`, which listens on `:9245` and matches the Nuxt dev proxy.
 
-For GitHub App authentication, set `github.app_id`, `github.installation_id`, and `github.private_key_path` in `config.json`. The private key path can use a config reference such as `@{env:GITHUB_APP_PRIVATE_KEY_PATH}` or `@{file:/run/secrets/github-app-private-key.pem}`.
+No GitHub credentials are required. Repository verification uses GitHub's public REST API for public repositories.
 
 For Turnstile-protected link creation, set:
 
@@ -106,14 +106,14 @@ TURNSTILE_SECRET_KEY=...
 TURNSTILE_SITE_KEY=...
 ```
 
-The example file uses Cloudflare's always-passing test keys so a local checkout can boot without real Turnstile credentials.
+The example file uses Cloudflare's always-passing invisible-widget test keys for local development. Dummy testing-key responses bypass action and hostname checks; real Turnstile secrets still enforce the configured checks. Do not build or deploy production releases with those keys. When `turnstile.enabled` is `true`, the backend refuses to start without `TURNSTILE_SECRET_KEY`; set `turnstile.enabled` to `false` only for an intentionally unprotected deployment.
 
 ### 3. Start the backend
 
 ```sh
-just run
+just run-dev
 # or
-go run ./
+CONFIG_PATH=config.json.dev go run ./
 ```
 
 On startup the backend loads `.env`, validates `config.json` against `schema/config.cue`, opens the Postgres pool, applies embedded migrations when `db.auto_migrate` is enabled, initializes GitHub and Turnstile clients, starts the verifier, and serves the API.
@@ -165,7 +165,7 @@ just migrate
 just db-reset     # destructive, local dev only
 ```
 
-## Building
+## Building And Release
 
 Build the backend binary into `bin/qr2g`:
 
@@ -173,14 +173,42 @@ Build the backend binary into `bin/qr2g`:
 just build
 ```
 
-Build the static frontend:
+Build the static frontend during development:
 
 ```sh
 cd web
 pnpm build
 ```
 
-The production frontend expects `/api/v1` to reach the Go service. Put the generated static site behind the same host as the backend, or configure your reverse proxy/CDN so `/api` goes to the backend and everything else serves the Nuxt output.
+Create the release archive:
+
+```sh
+just release
+```
+
+That command installs frontend dependencies with the lockfile, generates the Nuxt static output, copies it into the Go embed directory, builds a Linux x86-64 binary, and writes:
+
+```txt
+qr2git-V1.0.0-x86-64.tar.gz
+```
+
+The archive contains `qr2git`, `config.json`, `config.json.dev`, `.env.example`, `README.md`, `LICENSE`, `qr2git.service.template`, and `install-systemd.sh`. The frontend is embedded inside the Go binary, so running `./qr2git` serves both the SPA and `/api/v1` from the same listener. The backend injects `turnstile.site_key` into the embedded HTML at runtime, so set `TURNSTILE_SITE_KEY` on the deployed host rather than baking it into the release.
+
+Install the systemd service after extracting the archive:
+
+```sh
+cp .env.example .env
+$EDITOR .env
+$EDITOR config.json
+sudo ./install-systemd.sh
+sudo systemctl start qr2git
+```
+
+The installer only writes `/etc/systemd/system/qr2git.service`, reloads systemd, and enables the service. It does not move files or create users. The service runs `qr2git` from the extracted release directory, uses `config.json` from that directory, and loads environment variables from `.env` in that same directory. Override the unit name if needed:
+
+```sh
+sudo SERVICE_NAME=qr2git-prod ./install-systemd.sh
+```
 
 ## API
 
@@ -225,7 +253,7 @@ The backend rejects non-HTTPS URLs, non-`github.com` hosts, credentials, ports, 
 
 | Method | Path | Behavior |
 |---|---|---|
-| `GET` | `/` | JSON service metadata. |
+| `GET` | `/` | Embedded frontend when present; otherwise JSON service metadata. |
 | `GET` | `/health` | Liveness check. |
 | `GET` | `/ready` | Readiness check; pings Postgres. |
 | `POST` | `/api/v1/links` | Creates or reuses a link for a public GitHub repository URL. |
@@ -263,9 +291,10 @@ Important options:
 | `server.require_shorthand_turnstile` | `false` | Requires Turnstile for cold `/{owner}/{repo}` creation. |
 | `db.url` | `@{env?:DATABASE_URL}` | Postgres connection string. The service refuses to start if this resolves empty. |
 | `db.auto_migrate` | `true` | Applies embedded migrations at startup. |
-| `github.use_app_auth` | `true` | Uses GitHub App installation tokens when App credentials are configured. |
-| `github.use_graphql` | `true` | Enables GraphQL verification when App auth is usable. |
+| `github.rest_base_url` | `https://api.github.com` | GitHub REST API base URL used for public repository lookups. |
 | `turnstile.enabled` | `true` | Enables Turnstile checks on `POST /api/v1/links`. |
+| `turnstile.expected_action` | `create_link` | Requires Siteverify responses to match the frontend action. |
+| `turnstile.expected_hostname` | `""` | Optional exact hostname check for Siteverify responses; set to `qr2g.it` in production. |
 | `verifier.enabled` | `true` | Runs the background stale-link verifier. |
 | `verifier.fresh_ttl_seconds` | `3600` | How long an active link stays fresh before re-verification. |
 | `verifier.max_fail_count` | `10` | Consecutive failures before a private/deleted repo is tombstoned. |
@@ -295,7 +324,7 @@ The background verifier polls in batches with `FOR UPDATE SKIP LOCKED`, so multi
     <tr>
       <td align="center">
         <img src="assets/screenshots/screenshot_qr_page.png" alt="qr2g.it qr page" width="700"><br>
-        <em>QR page with the generate QR code and short url.</em>
+        <em>QR page with the generated QR code and short url.</em>
       </td>
     </tr>
   </table>

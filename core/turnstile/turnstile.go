@@ -20,11 +20,13 @@ import (
 
 // Verifier performs Siteverify lookups.
 type Verifier struct {
-	secretKey      string
-	siteverifyURL  string
-	enabled        bool
-	requestTimeout time.Duration
-	hc             *http.Client
+	secretKey        string
+	siteverifyURL    string
+	expectedAction   string
+	expectedHostname string
+	enabled          bool
+	requestTimeout   time.Duration
+	hc               *http.Client
 }
 
 var (
@@ -34,23 +36,30 @@ var (
 
 // Initialize wires the Verifier from config. Safe to call multiple times.
 func Initialize() error {
+	var initErr error
 	initOnce.Do(func() {
 		cfg := config.Get().Turnstile
 		timeout := time.Duration(cfg.RequestTimeoutSeconds) * time.Second
+		if cfg.Enabled && strings.TrimSpace(cfg.SecretKey) == "" {
+			initErr = ErrEmptySecret
+			return
+		}
 		instance = &Verifier{
-			secretKey:      cfg.SecretKey,
-			siteverifyURL:  cfg.SiteverifyURL,
-			enabled:        cfg.Enabled,
-			requestTimeout: timeout,
-			hc:             &http.Client{Timeout: timeout},
+			secretKey:        cfg.SecretKey,
+			siteverifyURL:    cfg.SiteverifyURL,
+			expectedAction:   strings.TrimSpace(cfg.ExpectedAction),
+			expectedHostname: strings.TrimSpace(cfg.ExpectedHostname),
+			enabled:          cfg.Enabled,
+			requestTimeout:   timeout,
+			hc:               &http.Client{Timeout: timeout},
 		}
 		if !instance.IsEnabled() {
-			logger.Warn().Msg("turnstile disabled or unconfigured (set TURNSTILE_SECRET_KEY)")
+			logger.Warn().Msg("turnstile disabled")
 		} else {
 			logger.Info().Msg("turnstile verifier ready")
 		}
 	})
-	return nil
+	return initErr
 }
 
 // Get returns the global Verifier. Panics if Initialize has not run.
@@ -83,6 +92,9 @@ type siteverifyResponse struct {
 	Action      string    `json:"action"`
 	CData       string    `json:"cdata"`
 	ErrorCodes  []string  `json:"error-codes"`
+	Metadata    struct {
+		ResultWithTestingKey bool `json:"result_with_testing_key"`
+	} `json:"metadata"`
 }
 
 // Verify validates token (and optionally remote IP). On success returns nil.
@@ -131,5 +143,29 @@ func (v *Verifier) Verify(ctx context.Context, token, remoteIP string) error {
 	if !out.Success {
 		return fmt.Errorf("%w: %s", ErrVerifyFailed, strings.Join(out.ErrorCodes, ","))
 	}
+	if v.isTestingValidation(out) {
+		return nil
+	}
+	if v.expectedAction != "" && out.Action != v.expectedAction {
+		return fmt.Errorf("%w: action mismatch", ErrVerifyFailed)
+	}
+	if v.expectedHostname != "" && !strings.EqualFold(out.Hostname, v.expectedHostname) {
+		return fmt.Errorf("%w: hostname mismatch", ErrVerifyFailed)
+	}
 	return nil
+}
+
+func (v *Verifier) isTestingValidation(out siteverifyResponse) bool {
+	return out.Metadata.ResultWithTestingKey || isCloudflareTestingSecret(v.secretKey)
+}
+
+func isCloudflareTestingSecret(secret string) bool {
+	switch strings.TrimSpace(secret) {
+	case "1x0000000000000000000000000000000AA",
+		"2x0000000000000000000000000000000AA",
+		"3x0000000000000000000000000000000AA":
+		return true
+	default:
+		return false
+	}
 }

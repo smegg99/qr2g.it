@@ -41,23 +41,18 @@ package schema
 }
 
 #GithubConfig: {
-	app_id:                     int | *0                                          @go(AppID)
-	installation_id:            int | *0                                          @go(InstallationID)
-	private_key_path:           string | *"@{env?:GITHUB_APP_PRIVATE_KEY_PATH}"   @go(PrivateKeyPath)
-	user_agent:                 string | *"qr2g.it"                               @go(UserAgent)
-	api_version:                string | *"2026-03-10"                            @go(APIVersion)
-	rest_base_url:              string | *"https://api.github.com"                @go(RESTBaseURL)
-	graphql_url:                string | *"https://api.github.com/graphql"        @go(GraphQLURL)
-	request_timeout_seconds:    int & >0 | *15                                    @go(RequestTimeoutSeconds)
-	token_refresh_skew_seconds: int & >0 | *300                                   @go(TokenRefreshSkewSeconds)
-	use_app_auth:               bool | *true                                      @go(UseAppAuth)
-	use_graphql:                bool | *true                                      @go(UseGraphQL)
+	user_agent:              string | *"qr2g.it"                    @go(UserAgent)
+	api_version:             string | *"2026-03-10"                 @go(APIVersion)
+	rest_base_url:           string | *"https://api.github.com"     @go(RESTBaseURL)
+	request_timeout_seconds: int & >0 | *15                         @go(RequestTimeoutSeconds)
 }
 
 #TurnstileConfig: {
 	secret_key:              string | *"@{env?:TURNSTILE_SECRET_KEY}"                                         @go(SecretKey)
 	site_key:                string | *"@{pubenv?:TURNSTILE_SITE_KEY}"                                        @go(SiteKey)
 	siteverify_url:          string | *"https://challenges.cloudflare.com/turnstile/v0/siteverify"            @go(SiteverifyURL)
+	expected_action:         string | *"create_link"                                                         @go(ExpectedAction)
+	expected_hostname:       string | *""                                                                    @go(ExpectedHostname)
 	enabled:                 bool | *true                                                                     @go(Enabled)
 	request_timeout_seconds: int & >0 | *5                                                                    @go(RequestTimeoutSeconds)
 }

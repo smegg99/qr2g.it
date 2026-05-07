@@ -13,6 +13,9 @@ import (
 )
 
 func (s *Server) handleRoot(c *gin.Context) {
+	if s.serveFrontendFile(c, "/") {
+		return
+	}
 	c.JSON(http.StatusOK, gin.H{
 		"service":     s.serviceName,
 		"description": "permanent QR identity layer for public GitHub repositories",
@@ -55,10 +58,16 @@ func (s *Server) handleReady(c *gin.Context) {
 }
 
 func (s *Server) handleRobots(c *gin.Context) {
+	if s.serveFrontendFile(c, c.Request.URL.Path) {
+		return
+	}
 	c.Header("Content-Type", "text/plain; charset=utf-8")
 	c.String(http.StatusOK, "User-agent: *\nDisallow: /\n")
 }
 
 func (s *Server) handleFavicon(c *gin.Context) {
+	if s.serveFrontendFile(c, c.Request.URL.Path) {
+		return
+	}
 	c.AbortWithStatus(http.StatusNotFound)
 }

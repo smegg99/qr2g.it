@@ -11,6 +11,9 @@ if ! command -v cue >/dev/null 2>&1; then
     exit 1
 fi
 
-cue exp gengotypes ./schema -o ./common/config/cue_types_gen.go
+GENERATED=./schema/cue_types_schema_gen.go
+rm -f "$GENERATED"
+cue exp gengotypes ./schema
+mv "$GENERATED" ./common/config/cue_types_gen.go
 gofmt -s -w ./common/config/cue_types_gen.go
 echo "regenerated common/config/cue_types_gen.go"

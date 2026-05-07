@@ -12,8 +12,10 @@ interface TurnstileWindow {
 
 interface TurnstileRenderOptions {
   'sitekey': string
-  'size'?: 'normal' | 'compact' | 'flexible' | 'invisible'
+  'size'?: 'normal' | 'compact' | 'flexible'
+  'execution'?: 'render' | 'execute'
   'appearance'?: 'always' | 'execute' | 'interaction-only'
+  'action'?: string
   'retry'?: 'auto' | 'never'
   'refresh-expired'?: 'auto' | 'manual' | 'never'
   'callback'?: (token: string) => void
@@ -24,6 +26,7 @@ interface TurnstileRenderOptions {
 
 const SCRIPT_URL = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit'
 const CONTAINER_ID = 'qr2g-turnstile-host'
+const ACTION = 'create_link'
 
 let scriptPromise: Promise<void> | null = null
 let widgetId: string | null = null
@@ -106,6 +109,7 @@ export function useTurnstile() {
     if (!turnstile) return null
 
     return new Promise<string>((resolve, reject) => {
+      pendingReject?.(new Error('turnstile: superseded by a new request'))
       pendingResolve = resolve
       pendingReject = reject
 
@@ -126,9 +130,11 @@ export function useTurnstile() {
       try {
         widgetId = turnstile.render(ensureContainer(), {
           'sitekey': siteKey,
-          'size': 'invisible',
+          'execution': 'execute',
           'appearance': 'execute',
+          'action': ACTION,
           'retry': 'auto',
+          'refresh-expired': 'auto',
           'callback': onCallback,
           'error-callback': onError,
           'expired-callback': () => {
@@ -140,7 +146,9 @@ export function useTurnstile() {
               // ignore: widget already gone
             }
           },
+          'timeout-callback': () => settleReject(new Error('turnstile: challenge timed out')),
         })
+        turnstile.execute(widgetId)
       }
       catch (err) {
         settleReject(err as Error)

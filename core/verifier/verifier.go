@@ -237,9 +237,6 @@ func (v *Verifier) verify(ctx context.Context, l models.Link) (models.Link, erro
 }
 
 func (v *Verifier) lookup(ctx context.Context, l models.Link) (github.Repo, error) {
-	if v.gh.UsesGraphQL() {
-		return v.gh.ResolveRepoByNodeID(ctx, l.GithubNodeID)
-	}
 	return v.gh.LookupRepoByDatabaseID(ctx, l.GithubDatabaseID)
 }
 

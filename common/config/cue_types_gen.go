@@ -20,10 +20,6 @@ type Config struct {
 	Preferences Preferences `json:"preferences"`
 }
 
-type TrustedProxyMode string
-
-type GinMode string
-
 type ServerConfig struct {
 	ListenAddr string `json:"listen_addr"`
 
@@ -31,11 +27,11 @@ type ServerConfig struct {
 
 	CanonicalBaseURL string `json:"canonical_base_url"`
 
-	TrustedProxyMode TrustedProxyMode `json:"trusted_proxy_mode"`
+	TrustedProxyMode string `json:"trusted_proxy_mode"`
 
 	MaxBodyBytes int64 `json:"max_body_bytes"`
 
-	GinMode GinMode `json:"gin_mode"`
+	GinMode string `json:"gin_mode"`
 
 	ShutdownTimeoutSeconds int64 `json:"shutdown_timeout_seconds"`
 
@@ -65,27 +61,13 @@ type DBConfig struct {
 }
 
 type GithubConfig struct {
-	AppID int64 `json:"app_id"`
-
-	InstallationID int64 `json:"installation_id"`
-
-	PrivateKeyPath string `json:"private_key_path"`
-
 	UserAgent string `json:"user_agent"`
 
 	APIVersion string `json:"api_version"`
 
 	RESTBaseURL string `json:"rest_base_url"`
 
-	GraphQLURL string `json:"graphql_url"`
-
 	RequestTimeoutSeconds int64 `json:"request_timeout_seconds"`
-
-	TokenRefreshSkewSeconds int64 `json:"token_refresh_skew_seconds"`
-
-	UseAppAuth bool `json:"use_app_auth"`
-
-	UseGraphQL bool `json:"use_graphql"`
 }
 
 type TurnstileConfig struct {
@@ -94,6 +76,10 @@ type TurnstileConfig struct {
 	SiteKey string `json:"site_key"`
 
 	SiteverifyURL string `json:"siteverify_url"`
+
+	ExpectedAction string `json:"expected_action"`
+
+	ExpectedHostname string `json:"expected_hostname"`
 
 	Enabled bool `json:"enabled"`
 
@@ -140,12 +126,6 @@ type RateLimitConfig struct {
 	CleanupSeconds int64 `json:"cleanup_seconds"`
 }
 
-type LocaleCode string
-
-type Preferences struct {
-	Language LocaleCode `json:"language"`
-}
-
 type LoggerConfig struct {
 	Verbose bool `json:"verbose"`
 
@@ -165,3 +145,13 @@ type LoggerConfig struct {
 
 	FrontendConsoleLog bool `json:"frontend_console_log"`
 }
+
+type Preferences struct {
+	Language string `json:"language"`
+}
+
+type TrustedProxyMode string
+
+type GinMode string
+
+type LocaleCode string

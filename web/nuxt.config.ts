@@ -28,15 +28,19 @@ if (fs.existsSync(rootEnvPath)) {
   }
 }
 
-// Cloudflare's documented "always passes" test site key. Used as a dev
-// fallback so a fresh checkout works without setting any env var; override
-// for production via NUXT_PUBLIC_TURNSTILE_SITE_KEY or TURNSTILE_SITE_KEY.
+// Cloudflare's documented "always passes" test site key. Used only as a
+// `nuxt dev` fallback so release builds never silently ship a test widget.
 const TURNSTILE_TEST_SITE_KEY = '1x00000000000000000000AA'
-
-const turnstileSiteKey
+const isNuxtDev = process.argv.includes('dev')
+const configuredTurnstileSiteKey
   = process.env.NUXT_PUBLIC_TURNSTILE_SITE_KEY
     || process.env.TURNSTILE_SITE_KEY
-    || TURNSTILE_TEST_SITE_KEY
+    || ''
+
+const turnstileSiteKey
+  = configuredTurnstileSiteKey === TURNSTILE_TEST_SITE_KEY && !isNuxtDev
+    ? ''
+    : configuredTurnstileSiteKey || (isNuxtDev ? TURNSTILE_TEST_SITE_KEY : '')
 
 const localeFiles = ['common.json']
 
