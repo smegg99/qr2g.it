@@ -1,0 +1,113 @@
+{
+  "app": {
+    "name": "qr2g.it",
+    "tagline": "Trwałe, przyjazne kodom QR krótkie linki do publicznych repozytoriów GitHub."
+  },
+  "header": {
+    "language": "Język",
+    "theme": "Motyw",
+    "help": "O projekcie",
+    "repository": "Repozytorium GitHub"
+  },
+  "help": {
+    "title": "O qr2g.it",
+    "close": "Zamknij",
+    "intro": "qr2g.it tworzy trwałe, przyjazne kodom QR krótkie linki do publicznych repozytoriów GitHub. Link przetrwa zmianę nazwy, przeniesienie i archiwizację — raz utworzony zawsze prowadzi do tego samego repozytorium.",
+    "howItWorks": {
+      "title": "Jak to działa",
+      "step1": "Wklej dowolne publiczne repozytorium GitHub — owner/repo, github.com/owner/repo albo pełny URL.",
+      "step2": "Ustalamy jego stabilną tożsamość w GitHubie, czyli GraphQL Node ID repozytorium, i tworzymy krótki slug.",
+      "step3": "Jeśli repozytorium zostanie później przemianowane albo przeniesione, krótki link automatycznie podąży za nową lokalizacją."
+    },
+    "qr": {
+      "title": "Kody QR",
+      "customize": "Dostosuj kolor pierwszego planu i tła, poziom korekcji błędów, rozmiar, margines oraz zaokrąglenie rogów.",
+      "export": "Eksportuj jako SVG, PNG, JPG albo BMP. Nazwy plików są tworzone na podstawie krótkiego linku."
+    },
+    "privacy": {
+      "title": "Prywatność",
+      "note": "qr2g.it linkuje wyłącznie do publicznych repozytoriów. Nie zbieramy danych osobowych."
+    }
+  },
+  "home": {
+    "hero": {
+      "title": "Trwałe krótkie linki do",
+      "titleAccent": "publicznych repozytoriów GitHub."
+    },
+    "input": {
+      "label": "Publiczne repozytorium GitHub",
+      "placeholder": "owner/repo, github.com/owner/repo albo pełny URL",
+      "submit": "Wygeneruj link",
+      "helper": "Obsługiwane formaty: owner/repo, github.com/owner/repo albo https://github.com/owner/repo. Tylko publiczne repozytoria."
+    },
+    "result": {
+      "title": "Twój krótki link",
+      "shortLink": "Krótki link",
+      "repository": "Repozytorium",
+      "status": "Status",
+      "copy": "Kopiuj",
+      "copied": "Skopiowano",
+      "openRepo": "Otwórz repozytorium",
+      "openShort": "Otwórz krótki link",
+      "close": "Zamknij",
+      "states": {
+        "active": "aktywne",
+        "tombstoned": "usunięte",
+        "stale": "nieaktualne",
+        "unknown": "nieznane"
+      }
+    },
+    "qr": {
+      "title": "Kod QR",
+      "preview": "Podgląd",
+      "controls": {
+        "foreground": "Pierwszy plan",
+        "background": "Tło",
+        "errorCorrection": "Korekcja błędów",
+        "ec": {
+          "L": "L",
+          "M": "M",
+          "Q": "Q",
+          "H": "H"
+        },
+        "ecHelper": {
+          "L": "~7% korekcji",
+          "M": "~15% korekcji",
+          "Q": "~25% korekcji",
+          "H": "~30% korekcji"
+        },
+        "size": "Rozmiar",
+        "margin": "Margines",
+        "cornerRadius": "Zaokrąglenie rogów",
+        "px": "px",
+        "modules": "moduły"
+      },
+      "export": {
+        "title": "Eksport",
+        "downloading": "Pobieranie…"
+      }
+    },
+    "errors": {
+      "invalid_url": "To nie jest prawidłowy adres publicznego repozytorium GitHub.",
+      "repo_private": "To repozytorium jest prywatne. qr2g.it linkuje wyłącznie do publicznych repozytoriów.",
+      "repo_not_found": "GitHub nie znalazł tego repozytorium.",
+      "rate_limited": "Osiągnięto dzienny limit tworzenia linków. Spróbuj ponownie później.",
+      "github_rate_limited": "Osiągnięto limit zapytań GitHuba. Spróbuj ponownie za chwilę.",
+      "github_unavailable": "GitHub jest tymczasowo niedostępny.",
+      "verification_failed": "Nie udało się zweryfikować tożsamości repozytorium.",
+      "turnstile_required": "Brakuje tokenu weryfikacyjnego.",
+      "turnstile_failed": "Weryfikacja nie powiodła się.",
+      "turnstile_unavailable": "Weryfikacja jest tymczasowo niedostępna.",
+      "internal": "Coś poszło nie tak po naszej stronie.",
+      "network": "Brak połączenia z siecią.",
+      "unknown": "Wystąpił nieoczekiwany błąd."
+    }
+  },
+  "settings": {
+    "theme": {
+      "auto": "Automatyczny",
+      "light": "Jasny",
+      "dark": "Ciemny"
+    }
+  }
+}

@@ -1,0 +1,294 @@
+{
+    "schemes": [
+        "http",
+        "https"
+    ],
+    "swagger": "2.0",
+    "info": {
+        "description": "Permanent, QR-friendly short links for public GitHub repositories.\nSlugs are uppercase base36 of the link's id; the canonical\nshort URL uses the uppercase host (QR-optimised) while the\nredirect target is the lowercase public host.",
+        "title": "qr2g.it API",
+        "contact": {},
+        "license": {
+            "name": "MIT",
+            "url": "https://github.com/smegg99/qr2g.it/blob/main/LICENSE"
+        },
+        "version": "1.0"
+    },
+    "basePath": "/",
+    "paths": {
+        "/api/v1/links": {
+            "post": {
+                "description": "Submits a public GitHub repository URL and returns its permanent short link.\nThe same `node_id` always maps back to the same slug.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "links"
+                ],
+                "summary": "Create or reuse a short link",
+                "parameters": [
+                    {
+                        "description": "Public GitHub repository URL",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.CreateLinkRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Existing link returned",
+                        "schema": {
+                            "$ref": "#/definitions/api.LinkResponse"
+                        }
+                    },
+                    "201": {
+                        "description": "New link created",
+                        "schema": {
+                            "$ref": "#/definitions/api.LinkResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid body or URL",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Repository private or Turnstile failure",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Repository not found",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorResponse"
+                        }
+                    },
+                    "429": {
+                        "description": "Per-IP rate limit reached",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorResponse"
+                        }
+                    },
+                    "503": {
+                        "description": "GitHub or Turnstile temporarily unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/links/{slug}": {
+            "get": {
+                "description": "Returns stored link metadata without performing GitHub verification.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "links"
+                ],
+                "summary": "Get link metadata",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Uppercase base36 slug, e.g. AB12",
+                        "name": "slug",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.LinkResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "No such link",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/links/{slug}/resolve": {
+            "get": {
+                "description": "Verifies stale active links against GitHub and returns the post-verification state.\nFails closed: a stale link is not advertised as active when verification fails.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "links"
+                ],
+                "summary": "Resolve a slug as JSON",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Uppercase base36 slug, e.g. AB12",
+                        "name": "slug",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Active link",
+                        "schema": {
+                            "$ref": "#/definitions/api.LinkResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "No such link",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorResponse"
+                        }
+                    },
+                    "410": {
+                        "description": "Tombstoned (private or deleted upstream)",
+                        "schema": {
+                            "$ref": "#/definitions/api.LinkResponse"
+                        }
+                    },
+                    "503": {
+                        "description": "Verification temporarily unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/api.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/health": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "meta"
+                ],
+                "summary": "Liveness probe",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/ready": {
+            "get": {
+                "description": "Pings the Postgres pool with a 2s timeout.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "meta"
+                ],
+                "summary": "Readiness probe",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "api.CreateLinkRequest": {
+            "type": "object",
+            "properties": {
+                "turnstileToken": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.LinkResponse": {
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "type": "string"
+                },
+                "currentFullName": {
+                    "type": "string"
+                },
+                "currentUrl": {
+                    "type": "string"
+                },
+                "githubDatabaseId": {
+                    "type": "integer"
+                },
+                "githubNodeId": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "initialFullName": {
+                    "type": "string"
+                },
+                "slug": {
+                    "type": "string"
+                },
+                "state": {
+                    "type": "string"
+                },
+                "stateReason": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                },
+                "verifiedAt": {
+                    "type": "string"
+                },
+                "verifyAfter": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}

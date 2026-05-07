@@ -1,0 +1,5 @@
+@use 'vuetify/settings' with (
+  $body-font-family: ('Overpass Variable', 'Overpass', system-ui, sans-serif),
+  $heading-font-family: ('Overpass Variable', 'Overpass', system-ui, sans-serif),
+  $border-radius-root: 10px,
+);

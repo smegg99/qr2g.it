@@ -1,0 +1,80 @@
+{
+  "db": {
+    "auto_migrate": true,
+    "connect_timeout_seconds": 10,
+    "health_check_period_seconds": 60,
+    "max_conns": 10,
+    "min_conns": 1,
+    "url": "@{env?:DATABASE_URL}"
+  },
+  "github": {
+    "api_version": "2026-03-10",
+    "app_id": 3612331,
+    "graphql_url": "https://api.github.com/graphql",
+    "installation_id": 129806622,
+    "private_key_path": "@{env?:GITHUB_APP_PRIVATE_KEY_PATH}",
+    "request_timeout_seconds": 15,
+    "rest_base_url": "https://api.github.com",
+    "token_refresh_skew_seconds": 300,
+    "use_app_auth": true,
+    "use_graphql": true,
+    "user_agent": "qr2g.it"
+  },
+  "logger": {
+    "dir": "",
+    "frontend_console_log": true,
+    "log_name": "qr2g.log",
+    "max_age_days": 30,
+    "max_backups": 5,
+    "max_size_mb": 10,
+    "no_color": false,
+    "show_caller": false,
+    "verbose": false
+  },
+  "preferences": {
+    "language": "en"
+  },
+  "ratelimit": {
+    "cleanup_seconds": 600,
+    "create_per_day": 50,
+    "create_per_min": 3,
+    "github_burst": 20,
+    "github_per_sec": 10,
+    "miss_per_min": 60,
+    "resolve_per_min": 600,
+    "shorthand_per_hour": 5
+  },
+  "server": {
+    "canonical_base_url": "HTTP://LOCALHOST:9245",
+    "gin_mode": "debug",
+    "idle_timeout_seconds": 60,
+    "listen_addr": ":9245",
+    "max_body_bytes": 4096,
+    "public_base_url": "http://localhost:9245",
+    "read_header_timeout_seconds": 5,
+    "require_shorthand_turnstile": false,
+    "service_name": "qr2g.it",
+    "shutdown_timeout_seconds": 15,
+    "trusted_proxy_mode": "cloudflare",
+    "write_timeout_seconds": 15
+  },
+  "turnstile": {
+    "enabled": true,
+    "request_timeout_seconds": 5,
+    "secret_key": "@{env?:TURNSTILE_SECRET_KEY}",
+    "site_key": "@{pubenv?:TURNSTILE_SITE_KEY}",
+    "siteverify_url": "https://challenges.cloudflare.com/turnstile/v0/siteverify"
+  },
+  "verifier": {
+    "backoff_base_seconds": 30,
+    "backoff_max_seconds": 3600,
+    "batch_size": 50,
+    "concurrency": 4,
+    "enabled": true,
+    "fresh_ttl_seconds": 3600,
+    "interval_seconds": 60,
+    "max_fail_count": 10,
+    "request_timeout_seconds": 15,
+    "stale_jitter_seconds": 600
+  }
+}
