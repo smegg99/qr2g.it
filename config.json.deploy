@@ -1,0 +1,15 @@
+{
+  "db": {"path": "/opt/qr2git/home/data/qr2git.sqlite", "auto_migrate": true},
+  "server": {
+    "listen_addr": "127.0.0.1:9260",
+    "public_base_url": "https://qr2g.it",
+    "canonical_base_url": "https://qr2g.it",
+    "trusted_proxy_mode": "all"
+  },
+  "turnstile": {
+    "enabled": true,
+    "expected_hostname": "qr2g.it",
+    "secret_key": "@{env:TURNSTILE_SECRET_KEY}",
+    "site_key": "@{pubenv:TURNSTILE_SITE_KEY}"
+  }
+}

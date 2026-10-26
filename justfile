@@ -1,81 +1,146 @@
+# justfile
 app_name := "qr2git"
 bin_dir := "bin"
-release_name := "qr2git-V1.0.0-x86-64"
-release_root := "release"
-frontend_embed_dir := "internal/frontend/dist"
+version := `tr -d '\r\n' < VERSION`
+release_name := app_name + "-v" + version + "-linux-amd64"
 
-# Default: list available commands
+# List available commands.
 default:
     @just --list
 
-# Tidy go modules
-tidy:
-    go mod tidy
-
-# Build the backend binary into ./bin/qr2git
-build:
-    mkdir -p {{bin_dir}}
-    go build -trimpath -o {{bin_dir}}/{{app_name}} ./
-
-# Build Nuxt, embed it into the Go binary, and package a Linux x86-64 release tarball
-release:
-    rm -rf {{release_root}}/{{release_name}} {{release_name}}.tar.gz
-    mkdir -p {{frontend_embed_dir}} {{release_root}}/{{release_name}}
-    find {{frontend_embed_dir}} -mindepth 1 -maxdepth 1 ! -name placeholder.txt -exec rm -rf {} +
+# Install the pinned frontend and Go dependencies.
+install:
     pnpm --dir web install --frozen-lockfile
-    pnpm --dir web build
-    cp -a web/.output/public/. {{frontend_embed_dir}}/
-    CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags "-s -w" -o {{release_root}}/{{release_name}}/{{app_name}} ./
-    cp README.md LICENSE config.json config.json.dev .env.example {{release_root}}/{{release_name}}/
-    install -m 0644 packaging/systemd/{{app_name}}.service.template {{release_root}}/{{release_name}}/{{app_name}}.service.template
-    install -m 0755 packaging/install-systemd.sh {{release_root}}/{{release_name}}/install-systemd.sh
-    tar -C {{release_root}} -czf {{release_name}}.tar.gz {{release_name}}
-    @printf 'wrote %s\n' "{{release_name}}.tar.gz"
+    go mod download
+    go -C tools/locales mod download
 
-# Run the backend (uses local config.json + .env)
-run:
-    go run ./
+# Run every source, generated-file, test, and build check.
+check: check-fmt vet test test-web lint typecheck check-locales check-generated build
 
-# Run the backend with the local development config
-run-dev:
-    CONFIG_PATH=config.json.dev go run ./
+# Fail when maintained Go source is not formatted.
+check-fmt:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    unformatted="$(gofmt -l main.go api common core internal schema docs)"
+    if [[ -n "$unformatted" ]]; then printf '%s\n' "$unformatted" >&2; exit 1; fi
 
-# Run unit tests
-test:
-    go test ./...
+# Format Go and frontend source; generated files stay generator-owned.
+fmt:
+    gofmt -w main.go api common core internal schema docs
+    pnpm --dir web exec eslint . --fix
 
-# Run unit tests with race detector and verbose output
-test-race:
-    go test -race -v ./...
-
-# Run go vet
+# Check Go source statically.
 vet:
     go vet ./...
 
-# Format the codebase
-fmt:
-    gofmt -s -w .
+# Run backend unit and SQLite integration tests.
+test:
+    go test ./...
 
-# Regenerate Go config types from the CUE schema (requires `cue` >= v0.16)
+# Run backend tests with the race detector.
+test-race:
+    go test -race ./...
+
+# Run frontend behavior and documented-command tests.
+test-web:
+    pnpm --dir web test
+
+# Check frontend code and templates without rewriting them.
+lint:
+    pnpm --dir web exec eslint . --max-warnings 0
+
+# Check frontend TypeScript using the pinned checker.
+typecheck:
+    pnpm --dir web typecheck
+
+# Generate both languages from the canonical locale sources.
+locales:
+    go -C tools/locales tool loc build -c ../../i18n/config.cue
+
+# Check generated locales and every source key reference.
+check-locales:
+    go -C tools/locales tool loc check -c ../../i18n/config.cue
+    go -C tools/locales tool loc lint keys -c ../../i18n/config.cue --strict
+
+# Regenerate Go configuration types with the pinned CUE tool.
 gen-types:
     bash scripts/gen-types.sh
 
-# Inspect the database schema (requires psql)
+# Check generated config, the shared package, and deployment settings.
+check-generated:
+    python3 scripts/check-generated.py
+
+# Build the static site and embed it in the Go binary.
+build: build-web build-api
+
+# Generate the production frontend from the current locale sources.
+build-web:
+    pnpm --dir web build
+    mkdir -p internal/frontend/dist
+    cp -a web/.output/public/. internal/frontend/dist/
+
+# Build the Go backend with the currently embedded frontend.
+build-api:
+    mkdir -p {{bin_dir}}
+    CGO_ENABLED=0 go build -trimpath -ldflags '-s -w' -o {{bin_dir}}/{{app_name}} .
+
+# Run the API and Nuxt dev server; stop only the process groups this recipe owns.
+dev: build-api
+    #!/usr/bin/env bash
+    set -euo pipefail
+    api_pid=""
+    web_pid=""
+    cleanup() {
+        [[ -z "$api_pid" ]] || kill -- "-$api_pid" 2>/dev/null || true
+        [[ -z "$web_pid" ]] || kill -- "-$web_pid" 2>/dev/null || true
+        [[ -z "$api_pid" ]] || wait "$api_pid" 2>/dev/null || true
+        [[ -z "$web_pid" ]] || wait "$web_pid" 2>/dev/null || true
+    }
+    trap cleanup EXIT
+    trap 'exit 130' INT
+    trap 'exit 143' TERM
+    CONFIG_PATH=config.json.dev setsid ./bin/{{app_name}} &
+    api_pid=$!
+    setsid pnpm --dir web dev &
+    web_pid=$!
+    wait -n "$api_pid" "$web_pid"
+
+# Run only the backend with the production-oriented local config.
+run:
+    go run .
+
+# Run only the backend with development settings.
+run-dev:
+    CONFIG_PATH=config.json.dev go run .
+
+# Package a portable Linux release without deleting an earlier release tree.
+release: build-web
+    #!/usr/bin/env bash
+    set -euo pipefail
+    stage="$(mktemp -d -t qr2git-release-XXXXXXXX)"
+    trap 'rm -rf -- "$stage"' EXIT
+    mkdir -p "$stage/{{release_name}}"
+    CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags '-s -w' -o "$stage/{{release_name}}/{{app_name}}" .
+    cp README.md LICENSE VERSION config.json config.json.dev .env.example "$stage/{{release_name}}/"
+    tar -C "$stage" -czf "{{release_name}}.tar.gz" "{{release_name}}"
+    printf 'wrote %s\n' '{{release_name}}.tar.gz'
+
+# Open the local SQLite database; sqlite3 is optional outside this recipe.
 db-shell:
-    psql $DATABASE_URL
+    sqlite3 data/qr2git.sqlite
 
-# Reset the local Postgres schema (DESTRUCTIVE - local dev only)
-db-reset:
-    psql $DATABASE_URL -c "DROP TABLE IF EXISTS schema_migrations, github_node_id_aliases, links CASCADE; DROP TYPE IF EXISTS link_state;"
+# Apply migrations by starting the backend.
+migrate:
+    go run .
 
-# Generate sqlc code from core/datastore/queries (requires sqlc)
+# Generate the optional SQL query package.
 gen-sqlc:
     sqlc generate
 
-# Regenerate the OpenAPI spec under ./docs (requires `swag` >= v1.16)
+# Regenerate the existing Swagger reference from Go annotations.
 gen-swagger:
-    swag init -g main.go --output docs --parseInternal
+    go tool swag init -g main.go --output docs --parseInternal
 
-# Run a one-shot migration apply via the binary's startup path
-migrate:
-    go run ./
+# Resolve the Go module graph without changing application behavior.
+tidy:
+    go mod tidy

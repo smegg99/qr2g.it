@@ -33,8 +33,15 @@ func (s *Server) serveFrontendFile(c *gin.Context, requestPath string) bool {
 
 	static := frontend.Static()
 	info, err := fs.Stat(static, name)
-	if err != nil || info.IsDir() {
+	if err != nil {
 		return false
+	}
+	if info.IsDir() {
+		name = pathpkg.Join(name, "index.html")
+		info, err = fs.Stat(static, name)
+		if err != nil || info.IsDir() {
+			return false
+		}
 	}
 	b, err := fs.ReadFile(static, name)
 	if err != nil {
@@ -48,7 +55,7 @@ func (s *Server) serveFrontendFile(c *gin.Context, requestPath string) bool {
 	if strings.HasPrefix(name, "_nuxt/") {
 		c.Header("Cache-Control", "public, max-age=31536000, immutable")
 	} else {
-		c.Header("Cache-Control", "public, max-age=300")
+		c.Header("Cache-Control", "no-cache")
 	}
 
 	http.ServeContent(c.Writer, c.Request, name, info.ModTime(), bytes.NewReader(b))

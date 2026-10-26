@@ -1,335 +1,164 @@
-<p align="center">
-  <img src="assets/qr2g.it.svg" alt="qr2g.it" width="500">
-</p>
+# qr2g.it
 
-qr2g.it is a small site for permanent, QR-friendly short links to public GitHub repositories. Paste `owner/repo`, `github.com/owner/repo`, or a full GitHub repository URL, and the app returns a short link plus a customizable QR code.
+Permanent short links and QR codes for public GitHub repositories. A link is tied to the repository's GitHub identity, so its slug survives a rename or transfer. The Go service serves the Nuxt/Vuetify interface and the HTTP API from one listener, with SQLite for persistent data.
 
-Links are bound to GitHub's stable repository identity (`node_id` and database id), not just the current `owner/repo` text. If a repository is renamed or transferred later, qr2g.it can verify the identity again and keep the same slug pointing at the same repo.
+- Paste `owner/repo`, `github.com/owner/repo`, or a full HTTPS GitHub URL.
+- Copy the short link, or customize and export a QR code as SVG, PNG, or JPG.
+- Use English or Polish and light, dark, or system appearance.
+- Read the [curl reference](https://qr2g.it/docs) or the [interactive JSON reference](https://qr2g.it/swagger/index.html).
+- Author: [smegg99 on LinkedIn](https://linkedin.smegg.me).
 
-## What It Does
+## Requirements
 
-- Runs a Nuxt/Vuetify single-page site for creating short links and exporting QR codes.
-- Accepts `owner/repo`, `github.com/owner/repo`, and `https://github.com/owner/repo` in the web UI.
-- Creates or reuses a permanent short link for public GitHub repositories through `POST /api/v1/links`.
-- Generates QR codes in the browser with foreground/background colors, error correction, size, margin, and corner radius controls.
-- Exports QR codes as SVG, PNG, or JPG using filenames based on the short link.
-- Supports English and Polish UI text, plus persisted light/dark/auto theme preferences.
-- Keeps the CLI shortcut: `curl qr2g.it/owner/repo` prints the short link as plain text.
-- Redirects `/{SLUG}` to the current verified GitHub repository URL.
-- Exposes JSON metadata at `/{SLUG}+` and `/api/v1/links/:slug`.
-- Tracks GitHub `node_id` aliases so migrated GitHub identities still map back to the original link.
-- Runs a background verifier that re-checks stale links and tombstones deleted or private repositories after repeated failures.
-- Applies per-IP create/resolve limits and GitHub-facing rate limits, with a small circuit breaker around GitHub calls.
+- Go 1.27, including CUE and Swagger pinned in `go.mod` and S99Locale pinned in `tools/locales/go.mod`.
+- Node.js 22.19+, 24.11+, or 26+ and pnpm 10.31.0, selected by `web/package.json`.
+- A writable directory for SQLite. No PostgreSQL server is required.
+- Python 3 for the generated-file checks and PostgreSQL dump importer.
+- `just` for the command recipes. `sqlite3` and `sqlc` are only needed for their optional recipes.
 
-## Usage
+The frontend uses S99AB's graphite theme and stylesheet with the same compact, flat controls as Goptivum-Desktop and SmeggTuner. Its pinned package archive and source provenance are under `web/vendor/`, so a VPS build does not require a sibling checkout or private GitHub credentials. pnpm remains this repository's package manager.
 
-### Website
-
-Start from the homepage, paste a public GitHub repository, and generate the link. The result screen shows the short URL, the current repository state, open/copy actions, and the QR editor.
-
-The web app accepts:
-
-- `smegg99/ThugHunter`
-- `github.com/smegg99/ThugHunter`
-- `https://github.com/smegg99/ThugHunter`
-
-### CLI
-
-The shorthand route still works nicely from a terminal:
-
-```sh
-curl https://qr2g.it/smegg99/ThugHunter
-# https://qr2g.it/AB12
-```
-
-`curl`, `wget`, `HTTPie`, `python-requests`, Go's default HTTP client, and PowerShell get a `text/plain` response with a trailing newline. Browsers get a redirect chain instead:
-
-```txt
-https://qr2g.it/smegg99/ThugHunter
-https://qr2g.it/AB12
-https://github.com/smegg99/ThugHunter
-```
-
-Force plain text from any client with `?format=text`, `?text=1`, or `Accept: text/plain`.
-
-## Prerequisites
-
-### Backend
-
-- Go matching the directive in `go.mod` (currently `1.26.2`)
-- PostgreSQL reachable through `DATABASE_URL`
-- Optional: `just` for the recipes in `justfile`
-- Optional but recommended: a GitHub App installation for authenticated REST requests and strict GraphQL verification by `node_id`
-- Cloudflare Turnstile keys for public link creation, unless `turnstile.enabled` is set to `false`
-
-### Frontend
-
-- Node.js
-- pnpm
-
-### Optional Development Tools
-
-- `cue` for regenerating Go config types
-- `sqlc` for generating repository query code if needed
-- `swag` for regenerating the OpenAPI files under `docs/`
-- `psql` for the database recipes
-
-## Setup
-
-### 1. Clone the repository
-
-```sh
-git clone https://github.com/smegg99/qr2g.it
-cd qr2g.it
-```
-
-### 2. Configure the backend
+## Local development
 
 ```sh
 cp .env.example .env
+just install
+just dev
 ```
 
-At minimum, set a local Postgres URL:
+The API listens at `127.0.0.1:9245` and Nuxt at `http://127.0.0.1:5173`. Nuxt proxies `/api` to the backend. `config.json.dev` stores data at `data/qr2git.sqlite`. The example environment and Nuxt development fallback use Cloudflare testing keys. Use real keys in production.
+
+`CONFIG_PATH` selects a different configuration file. The CUE schema in `schema/config.cue` owns its shape and defaults; `just gen-types` regenerates the Go types. The default `config.json` binds to loopback port 8080, while the S99Deploy config uses port 9260.
+
+## Verification and builds
 
 ```sh
-DATABASE_URL=postgres://qr2g:qr2g@localhost:5432/qr2g?sslmode=disable
-```
-
-The checked-in `config.json` is production-oriented: it binds the backend to `127.0.0.1:8080`, assumes nginx or another reverse proxy handles public HTTPS, and enforces the production Turnstile hostname. For local testing, use `config.json.dev`, which listens on `:9245` and matches the Nuxt dev proxy.
-
-No GitHub credentials are required. Repository verification uses GitHub's public REST API for public repositories.
-
-For Turnstile-protected link creation, set:
-
-```sh
-TURNSTILE_SECRET_KEY=...
-TURNSTILE_SITE_KEY=...
-```
-
-The example file uses Cloudflare's always-passing invisible-widget test keys for local development. Dummy testing-key responses bypass action and hostname checks; real Turnstile secrets still enforce the configured checks. Do not build or deploy production releases with those keys. When `turnstile.enabled` is `true`, the backend refuses to start without `TURNSTILE_SECRET_KEY`; set `turnstile.enabled` to `false` only for an intentionally unprotected deployment.
-
-### 3. Start the backend
-
-```sh
-just run-dev
-# or
-CONFIG_PATH=config.json.dev go run ./
-```
-
-On startup the backend loads `.env`, validates `config.json` against `schema/config.cue`, opens the Postgres pool, applies embedded migrations when `db.auto_migrate` is enabled, initializes GitHub and Turnstile clients, starts the verifier, and serves the API.
-
-### 4. Start the site
-
-```sh
-cd web
-pnpm install
-pnpm dev
-```
-
-Open `http://localhost:5173`. In development, Nuxt proxies `/api` to `QR2G_BACKEND_URL` or `http://127.0.0.1:9245`.
-
-## Development
-
-Backend:
-
-```sh
-just test
-just test-race
-just vet
-just fmt
-```
-
-Frontend:
-
-```sh
-cd web
-pnpm lint
-pnpm lint:fix
-pnpm build
-pnpm preview
-```
-
-Generated code and specs:
-
-```sh
-just gen-types    # CUE schema -> Go config types
-just gen-sqlc     # SQL query package, if needed
-just gen-swagger  # OpenAPI docs under ./docs
-```
-
-Database helpers:
-
-```sh
-just db-shell
-just migrate
-just db-reset     # destructive, local dev only
-```
-
-## Building And Release
-
-Build the backend binary into `bin/qr2g`:
-
-```sh
+just check
 just build
-```
-
-Build the static frontend during development:
-
-```sh
-cd web
-pnpm build
-```
-
-Create the release archive:
-
-```sh
 just release
 ```
 
-That command installs frontend dependencies with the lockfile, generates the Nuxt static output, copies it into the Go embed directory, builds a Linux x86-64 binary, and writes:
+`just check` runs Go formatting, vet, backend tests, frontend tests, lint, typecheck, locale drift and source-key checks, config generation checks, shared-package verification, deployment checks, and the complete build. `just test-race` runs backend tests with the race detector.
 
-```txt
-qr2git-V1.0.0-x86-64.tar.gz
-```
+`VERSION` owns the application release version. `just build` builds the frontend from the committed locale bundles, embeds it, and produces `bin/qr2git`. `just release` packages that binary, configuration examples, environment example, version, README, and license into `qr2git-v<VERSION>-linux-amd64.tar.gz` without deleting an earlier release tree.
 
-The archive contains `qr2git`, `config.json`, `config.json.dev`, `.env.example`, `README.md`, `LICENSE`, `qr2git.service.template`, and `install-systemd.sh`. The frontend is embedded inside the Go binary, so running `./qr2git` serves both the SPA and `/api/v1` from the same listener. The backend injects `turnstile.site_key` into the embedded HTML at runtime, so set `TURNSTILE_SITE_KEY` on the deployed host rather than baking it into the release.
+English and Polish copy is authored in `i18n/locales/`. S99Locale generates the committed bundles under `web/i18n/generated/`. Change YAML, run `just locales`, and check with `just check-locales`. The private S99Locale module is a development dependency: a cold tool cache needs authenticated access to its Git repository. Production builds consume the committed generated bundles and do not run or download that compiler. Do not edit generated bundles or config types directly.
 
-Install the systemd service after extracting the archive:
+## curl API
 
-```sh
-cp .env.example .env
-$EDITOR .env
-$EDITOR config.json
-sudo ./install-systemd.sh
-sudo systemctl start qr2git
-```
+### Get or create a short link
 
-The installer only writes `/etc/systemd/system/qr2git.service`, reloads systemd, and enables the service. It does not move files or create users. The service runs `qr2git` from the extracted release directory, uses `config.json` from that directory, and loads environment variables from `.env` in that same directory. Override the unit name if needed:
+Replace `smegg99/qr2g.it` with a public `owner/repo`:
 
 ```sh
-sudo SERVICE_NAME=qr2git-prod ./install-systemd.sh
-```
-
-## API
-
-Swagger UI is served at `/swagger/index.html` while the backend is running. The OpenAPI spec is committed under `docs/`.
-
-### Create a Link
-
-```sh
-curl -s -X POST http://localhost:9245/api/v1/links \
-  -H 'Content-Type: application/json' \
-  -d '{"url":"https://github.com/owner/repo","turnstileToken":"TOKEN"}'
+curl -fsS https://qr2g.it/smegg99/qr2g.it
 ```
 
 Example response:
 
-```json
-{
-  "url": "HTTP://LOCALHOST:9245/ABC123",
-  "slug": "ABC123",
-  "id": 623698779,
-  "initialFullName": "owner/repo",
-  "currentFullName": "owner/repo",
-  "currentUrl": "https://github.com/owner/repo",
-  "state": "active",
-  "verifiedAt": "2026-05-05T19:22:00Z",
-  "verifyAfter": "2026-05-05T20:22:00Z",
-  "createdAt": "2026-05-05T19:22:00Z",
-  "githubNodeId": "R_kgDOExample",
-  "githubDatabaseId": 123456789
-}
+```text
+https://qr2g.it/2
 ```
 
-Accepted backend URL forms are strict HTTPS GitHub repository URLs:
+Known repositories return their existing address. New public repositories are checked in GitHub and receive a new slug. The response is a plain-text URL with a trailing newline. curl is recognized by its user agent; other clients can explicitly request text:
 
-- `https://github.com/owner/repo`
-- `https://github.com/owner/repo/`
-- `https://github.com/owner/repo.git`
-
-The backend rejects non-HTTPS URLs, non-`github.com` hosts, credentials, ports, query strings, fragments, extra path components, and reserved owner-level paths.
-
-### Routes
-
-| Method | Path | Behavior |
-|---|---|---|
-| `GET` | `/` | Embedded frontend when present; otherwise JSON service metadata. |
-| `GET` | `/health` | Liveness check. |
-| `GET` | `/ready` | Readiness check; pings Postgres. |
-| `POST` | `/api/v1/links` | Creates or reuses a link for a public GitHub repository URL. |
-| `GET` | `/api/v1/links/:slug` | Returns stored link metadata without verifying. |
-| `GET` | `/api/v1/links/:slug/resolve` | Resolves as JSON, verifying stale active links first. |
-| `GET` | `/{SLUG}` | Redirects to the current GitHub URL, verifying stale links first. |
-| `GET` | `/{SLUG}+` | Returns metadata for a slug without redirecting. |
-| `GET` | `/{owner}/{repo}` | Finds or creates a link. CLI clients get text; browsers redirect to the slug. |
-| `GET` | `/swagger/index.html` | Swagger UI for the JSON API. |
-
-Slug rules live in `core/slug`: uppercase base36 only, one to twelve characters, no leading zero, no lowercase canonical form.
-
-## Configuration
-
-`config.json` is validated against `schema/config.cue`. String values can reference environment variables, files, keyring entries, the config directory, or the data directory with `@{...}` references. Private references (`@{env:...}`, `@{file:...}`, `@{keyring:...}`) are excluded from exported public config. Public references (`@{pubenv:...}`, `@{pubfile:...}`, `@{cfgdir:...}`, `@{datadir:...}`) are kept.
-
-Add `?` after the source name to make a reference optional:
-
-```json
-{
-  "db": {
-    "url": "@{env?:DATABASE_URL}"
-  }
-}
+```sh
+curl -fsS -H "Accept: text/plain" https://qr2g.it/smegg99/qr2g.it
 ```
 
-Important options:
+`?format=text` and `?text=1` also request text. A browser normally receives a redirect to the short link instead. Public slugs are uppercase base36, case-sensitive, and never recycled.
 
-| Option | Schema default | Description |
-|---|---|---|
-| `server.listen_addr` | `:8080` | Backend listen address. The local `config.json` uses `:9245`. |
-| `server.public_base_url` | `https://qr2g.it` | Lowercase public URL used for redirects and CLI text output. |
-| `server.canonical_base_url` | `HTTPS://QR2G.IT` | Canonical short URL used in API responses and QR payloads. |
-| `server.trusted_proxy_mode` | `cloudflare` | Client IP extraction mode: `cloudflare`, `none`, or `all`. |
-| `server.require_shorthand_turnstile` | `false` | Requires Turnstile for cold `/{owner}/{repo}` creation. |
-| `db.url` | `@{env?:DATABASE_URL}` | Postgres connection string. The service refuses to start if this resolves empty. |
-| `db.auto_migrate` | `true` | Applies embedded migrations at startup. |
-| `github.rest_base_url` | `https://api.github.com` | GitHub REST API base URL used for public repository lookups. |
-| `turnstile.enabled` | `true` | Enables Turnstile checks on `POST /api/v1/links`. |
-| `turnstile.expected_action` | `create_link` | Requires Siteverify responses to match the frontend action. |
-| `turnstile.expected_hostname` | `""` | Optional exact hostname check for Siteverify responses; set to `qr2g.it` in production. |
-| `verifier.enabled` | `true` | Runs the background stale-link verifier. |
-| `verifier.fresh_ttl_seconds` | `3600` | How long an active link stays fresh before re-verification. |
-| `verifier.max_fail_count` | `10` | Consecutive failures before a private/deleted repo is tombstoned. |
-| `ratelimit.create_per_min` | `3` | Per-IP create rate limit. |
-| `ratelimit.create_per_day` | `50` | Per-IP daily create cap. |
-| `ratelimit.shorthand_per_hour` | `5` | Per-IP cold-create cap on `/{owner}/{repo}`. |
-| `ratelimit.resolve_per_min` | `600` | Per-IP slug resolve limit. |
+### Read stored metadata
 
-## Verification Behavior
+```sh
+curl -fsS https://qr2g.it/api/v1/links/2
+curl -fsS https://qr2g.it/2+
+```
 
-Fresh active links redirect immediately to the cached GitHub URL. Stale active links are verified before redirecting. When GraphQL is available, verification resolves the repository by `node_id`; otherwise it falls back to REST lookup by GitHub database id.
+Both return JSON without re-verifying in GitHub. Fields include `url`, `slug`, `id`, `initialFullName`, `currentFullName`, `currentUrl`, `state`, verification times, and the GitHub node/database IDs. States are `active`, `private`, `deleted`, and `unavailable`.
 
-Verification fails closed: a stale link is not redirected if GitHub verification fails, rate limits, or is unavailable. Private or deleted repositories are only tombstoned after `verifier.max_fail_count` consecutive failures. Tombstoned slugs are never recycled.
+### Verify and resolve
 
-The background verifier polls in batches with `FOR UPDATE SKIP LOCKED`, so multiple backend instances can share the work safely.
+```sh
+curl --fail-with-body -sS https://qr2g.it/api/v1/links/2/resolve
+```
 
-## Screenshots
+The resolve endpoint re-verifies stale active repositories before returning their destination. Unavailable verification fails closed instead of treating an old destination as trustworthy. Non-active links return HTTP 410. To inspect the normal redirect without following it:
 
-<div align="center">
-  <table>
-    <tr>
-      <td align="center">
-        <img src="assets/screenshots/screenshot_home_page.png" alt="qr2g.it home page" width="700"><br>
-        <em>Home page with the repository input and quick actions.</em>
-      </td>
-    </tr>
-    <tr>
-      <td align="center">
-        <img src="assets/screenshots/screenshot_qr_page.png" alt="qr2g.it qr page" width="700"><br>
-        <em>QR page with the generated QR code and short url.</em>
-      </td>
-    </tr>
-  </table>
-</div>
+```sh
+curl -sS -D - -o /dev/null https://qr2g.it/2
+```
+
+Add `-L` when curl should follow redirects.
+
+### Submit JSON
+
+The shorthand command is the simplest terminal interface. The public JSON endpoint requires a fresh Turnstile token obtained by completing a browser challenge. Set `TURNSTILE_TOKEN` to that token; an account API token is not a replacement, and verification tokens are single-use.
+
+```sh
+curl --fail-with-body -sS https://qr2g.it/api/v1/links \
+  -H 'Content-Type: application/json' \
+  --data "{\"url\":\"https://github.com/smegg99/qr2g.it\",\"turnstileToken\":\"$TURNSTILE_TOKEN\"}"
+```
+
+The repository URL must be HTTPS on `github.com`, with no credentials, query, fragment, port, or extra path components. Successful submissions return JSON and HTTP 201 for a new link or 200 for an existing one.
+
+### Limits and errors
+
+The deployment defaults apply per IP:
+
+- Creating an unknown repository through shorthand: 5 per hour. Known-repository lookups do not consume this allowance.
+- POST: 3 requests per minute and 50 submissions per day after URL validation. Failed verification consumes that daily allowance.
+- Slug resolution: 600 requests per minute.
+
+Errors contain a stable `error` code and a `message`. `--fail-with-body` requires curl 7.76.0 or newer and retains the error response while returning a failing exit code.
+
+| HTTP | Meaning |
+| --- | --- |
+| 200 | Existing link, metadata, or successful resolution |
+| 201 | New link created |
+| 302 | Redirect |
+| 400 | Invalid JSON or repository URL |
+| 403 | Private repository or missing/failed Turnstile verification |
+| 404 | Repository or slug not found |
+| 410 | Link is no longer active |
+| 429 | Per-IP request limit |
+| 503 | GitHub, Turnstile, or identity verification unavailable |
+
+`GET /health` is liveness. `GET /ready` checks SQLite connectivity. `GET /{slug}+` reads metadata; `GET /{slug}` follows the verified repository destination.
+
+## VPS deployment
+
+Install the current S99Deploy CLI as `/usr/local/bin/depl` on the target host. Once this repository's changes are published:
+
+```sh
+sudo depl install https://github.com/smegg99/qr2g.it.git
+sudoedit /opt/qr2git/.env
+sudo depl up qr2git
+```
+
+Set real `TURNSTILE_SECRET_KEY` and `TURNSTILE_SITE_KEY` values in the root-owned, mode-0600 environment file. A Managed Turnstile widget lets a visitor complete a visible challenge when needed. The backend injects the public site key into embedded HTML at runtime.
+
+`deploy.json` builds from the checkout, runs as the dedicated `qr2git` identity, loads `config.json.deploy`, and checks `/ready` on `127.0.0.1:9260`. A TLS reverse proxy must replace forwarded client-IP headers with the verified visitor address. Direct origin clients must not be allowed to supply trusted visitor addresses.
+
+The production database is `/opt/qr2git/home/data/qr2git.sqlite`, outside the checkout. Restart with `sudo systemctl restart qr2git` and read logs with `sudo journalctl -u qr2git`. Updating code must preserve the database and service environment.
+
+## Import and backup
+
+Stop the destination service before importing. Python 3 and a `pg_restore` version capable of reading the dump are required:
+
+```sh
+python3 scripts/import-postgres.py /path/to/kopia_bazy.dump /path/to/new-qr2git.sqlite
+```
+
+The importer refuses to overwrite an existing file. It preserves link IDs, aliases, nullable fields, states, timestamp instants (normalized to UTC), and the PostgreSQL sequence high-water mark. It compares every imported field and checks foreign keys and SQLite integrity. Give the service account ownership of the imported file and point `db.path` at it before starting.
+
+For a live SQLite backup, use the backup API rather than copying a database without its WAL:
+
+```sh
+sqlite3 /path/to/qr2git.sqlite ".backup '/path/to/backup.sqlite'"
+```
 
 ## License
 
-See [LICENSE](LICENSE).
+[MIT](LICENSE).
