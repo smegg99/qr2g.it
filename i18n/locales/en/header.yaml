@@ -1,0 +1,24 @@
+language:
+  value: Language
+  description: Text shown in header / language
+theme:
+  value: Theme
+  description: Text shown in header / theme
+help:
+  value: About
+  description: Text shown in header / help
+repository:
+  value: GitHub repository
+  description: Text shown in header / repository
+home:
+  value: qr2g.it home
+  description: Text shown in header / home
+docs:
+  value: curl API
+  description: Text shown in header / docs
+skip:
+  value: Skip to content
+  description: Text shown in header / skip
+links:
+  value: Project links
+  description: Text shown in header / links

@@ -1,7 +1,10 @@
 // i18n/i18n.config.ts
+import { pluralRules } from './generated/plurals.gen'
+
 export default defineI18nConfig(() => ({
   legacy: false,
   fallbackLocale: 'en',
+  pluralRules,
 
   missingWarn: import.meta.dev,
   fallbackWarn: import.meta.dev,

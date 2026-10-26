@@ -1,0 +1,147 @@
+input:
+  label:
+    value: Twoje repozytorium GitHub
+    description: Text shown in home / input / label
+  placeholder:
+    value: owner/repo, github.com/owner/repo albo pełny URL
+    description: Text shown in home / input / placeholder
+  submit:
+    value: Wygeneruj link
+    description: Text shown in home / input / submit
+  clear:
+    value: Wyczyść
+    description: Text shown in home / input / clear
+
+result:
+  title:
+    value: Twój krótki link
+    description: Text shown in home / result / title
+  shortLink:
+    value: Krótki link
+    description: Text shown in home / result / shortLink
+  repository:
+    value: Repozytorium
+    description: Text shown in home / result / repository
+  copy:
+    value: Kopiuj
+    description: Text shown in home / result / copy
+  copied:
+    value: Skopiowano
+    description: Text shown in home / result / copied
+  openRepo:
+    value: Otwórz repozytorium
+    description: Text shown in home / result / openRepo
+  openShort:
+    value: Otwórz krótki link
+    description: Text shown in home / result / openShort
+  close:
+    value: Zamknij
+    description: Text shown in home / result / close
+qr:
+  title:
+    value: Kod QR
+    description: Text shown in home / qr / title
+  preview:
+    value: Podgląd
+    description: Text shown in home / qr / preview
+  controls:
+    foreground:
+      value: Pierwszy plan
+      description: Text shown in home / qr / controls / foreground
+    background:
+      value: Tło
+      description: Text shown in home / qr / controls / background
+    errorCorrection:
+      value: Korekcja błędów
+      description: Text shown in home / qr / controls / errorCorrection
+    ec:
+      L:
+        value: L
+        description: Text shown in home / qr / controls / ec / L
+      M:
+        value: M
+        description: Text shown in home / qr / controls / ec / M
+      Q:
+        value: Q
+        description: Text shown in home / qr / controls / ec / Q
+      H:
+        value: H
+        description: Text shown in home / qr / controls / ec / H
+    ecHelper:
+      L:
+        value: ~7% korekcji
+        description: Text shown in home / qr / controls / ecHelper / L
+      M:
+        value: ~15% korekcji
+        description: Text shown in home / qr / controls / ecHelper / M
+      Q:
+        value: ~25% korekcji
+        description: Text shown in home / qr / controls / ecHelper / Q
+      H:
+        value: ~30% korekcji
+        description: Text shown in home / qr / controls / ecHelper / H
+    size:
+      value: Rozmiar docelowy
+      description: Text shown in home / qr / controls / size
+    margin:
+      value: Margines
+      description: Text shown in home / qr / controls / margin
+    cornerRadius:
+      value: Zaokrąglenie rogów
+      description: Text shown in home / qr / controls / cornerRadius
+    px:
+      value: px
+      description: Text shown in home / qr / controls / px
+    modules:
+      value: moduły
+      description: Text shown in home / qr / controls / modules
+  export:
+    title:
+      value: Eksport
+      description: Text shown in home / qr / export / title
+    downloading:
+      value: Pobieranie…
+      description: Text shown in home / qr / export / downloading
+errors:
+  invalid_url:
+    value: To nie jest prawidłowy adres publicznego repozytorium GitHub.
+    description: Text shown in home / errors / invalid_url
+  repo_private:
+    value: To repozytorium jest prywatne. qr2g.it linkuje wyłącznie do publicznych repozytoriów.
+    description: Text shown in home / errors / repo_private
+  repo_not_found:
+    value: GitHub nie znalazł tego repozytorium.
+    description: Text shown in home / errors / repo_not_found
+  rate_limited:
+    value: Osiągnięto dzienny limit tworzenia linków. Spróbuj ponownie później.
+    description: Text shown in home / errors / rate_limited
+  github_rate_limited:
+    value: Osiągnięto limit zapytań GitHuba. Spróbuj ponownie za chwilę.
+    description: Text shown in home / errors / github_rate_limited
+  github_unavailable:
+    value: GitHub jest tymczasowo niedostępny.
+    description: Text shown in home / errors / github_unavailable
+  verification_failed:
+    value: Nie udało się zweryfikować tożsamości repozytorium.
+    description: Text shown in home / errors / verification_failed
+  turnstile_required:
+    value: Brakuje tokenu weryfikacyjnego.
+    description: Text shown in home / errors / turnstile_required
+  turnstile_failed:
+    value: Weryfikacja nie powiodła się.
+    description: Text shown in home / errors / turnstile_failed
+  turnstile_unavailable:
+    value: Nie udało się ukończyć weryfikacji. Spróbuj ponownie.
+    description: Text shown in home / errors / turnstile_unavailable
+  internal:
+    value: Coś poszło nie tak po naszej stronie.
+    description: Text shown in home / errors / internal
+  network:
+    value: Brak połączenia z siecią.
+    description: Text shown in home / errors / network
+  unknown:
+    value: Wystąpił nieoczekiwany błąd.
+    description: Text shown in home / errors / unknown
+metaTitle:
+  value: qr2g.it - Stałe linki do GitHuba
+  description: Text shown in home / metaTitle

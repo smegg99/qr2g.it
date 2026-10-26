@@ -1,13 +1,23 @@
 <!-- app/components/home/NumberField.vue -->
 <template>
-  <v-number-input :id="id" v-model="value" :aria-label="ariaLabel" :min="min" :max="max" :step="step" :suffix="suffix"
-    density="comfortable" hide-details @blur="clamp" />
+  <v-number-input
+    :id="id"
+    v-model="value"
+    :aria-label="label"
+    :min="min"
+    :max="max"
+    :step="step"
+    :suffix="suffix"
+    density="compact"
+    hide-details
+    @blur="clamp"
+  />
 </template>
 
 <script setup lang="ts">
 const props = defineProps<{
   id: string
-  ariaLabel: string
+  label: string
   modelValue: number
   min?: number
   max?: number

@@ -1,22 +1,28 @@
 <!-- app/layouts/default.vue -->
 <template>
   <v-app>
-    <ClientOnly>
-      <BackgroundFx />
-    </ClientOnly>
-    <FloatingHeader />
-    <v-main>
-      <slot />
+    <GroundFx />
+    <a
+      class="skip-link"
+      href="#main"
+    >{{ t('header.skip') }}</a>
+    <SiteHeader />
+    <v-main
+      id="main"
+      tabindex="-1"
+    >
+      <div class="page-body">
+        <slot />
+      </div>
     </v-main>
-    <SplashScreen />
   </v-app>
 </template>
 
 <script setup lang="ts">
-import BackgroundFx from '~/components/layout/BackgroundFx.vue'
-import FloatingHeader from '~/components/layout/FloatingHeader.vue'
-import SplashScreen from '~/components/layout/SplashScreen.vue'
+import GroundFx from '~/components/layout/GroundFx.vue'
+import SiteHeader from '~/components/layout/SiteHeader.vue'
 import { useSettingsSync } from '~/composables/useSettingsSync'
 
+const { t } = useI18n()
 useSettingsSync()
 </script>

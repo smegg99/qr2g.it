@@ -1,26 +1,36 @@
 <!-- app/components/home/QrSection.vue -->
 <template>
-  <v-sheet color="transparent" class="d-flex flex-column ga-5">
-    <div class="text-caption text-medium-emphasis">
-      {{ t('home.qr.title') }}
-    </div>
-
-    <v-row no-gutters class="qr-section__row">
-      <v-col cols="12" md="5">
-        <QrCanvas :snapshot="snapshot" :background="background" :corner-radius="cornerRadius" :ready="!!snapshot" />
-      </v-col>
-      <v-col cols="12" md="7">
-        <div class="d-flex flex-column ga-5">
-          <QrControls v-model:foreground="foreground" v-model:background="background" v-model:size="size"
-            v-model:margin="margin" v-model:error-correction="errorCorrection" />
-          <ExportBar v-model:corner-radius="cornerRadius" :busy="exporting" @export="onExport" />
-        </div>
-      </v-col>
-    </v-row>
-  </v-sheet>
+  <PaneHead :title="t('home.qr.title')">
+    <template #meta>
+      <span v-if="snapshot">{{ snapshot.modules }} x {{ snapshot.modules }} {{ t('home.qr.controls.modules') }}</span>
+    </template>
+    <template #actions>
+      <ExportBar
+        :busy="exporting"
+        @export="onExport"
+      />
+    </template>
+  </PaneHead>
+  <div class="pane-body qr-body">
+    <QrCanvas
+      :snapshot="snapshot"
+      :background="background"
+      :corner-radius="cornerRadius"
+      :ready="!!snapshot"
+    />
+    <QrControls
+      v-model:foreground="foreground"
+      v-model:background="background"
+      v-model:size="size"
+      v-model:margin="margin"
+      v-model:error-correction="errorCorrection"
+      v-model:corner-radius="cornerRadius"
+    />
+  </div>
 </template>
 
 <script setup lang="ts">
+import PaneHead from '~/components/common/PaneHead.vue'
 import QrCanvas from './QrCanvas.vue'
 import QrControls from './QrControls.vue'
 import ExportBar from './ExportBar.vue'
@@ -32,13 +42,12 @@ const props = defineProps<{
 }>()
 
 const { t } = useI18n()
-const settings = useSettingsStore()
 const { snapshot, build, exportSvg, exportPng, exportJpg, downloadBlob } = useQrCode()
 
-const foreground = ref(settings.resolvedTheme === 'dark' ? '#e0e3ec' : '#0e1015')
-const background = ref(settings.resolvedTheme === 'dark' ? '#0e1015' : '#ffffff')
+const foreground = ref('#111111')
+const background = ref('#ffffff')
 const size = ref(512)
-const margin = ref(2)
+const margin = ref(4)
 const cornerRadius = ref(0)
 const errorCorrection = ref<QrErrorLevel>('M')
 
@@ -85,19 +94,3 @@ function sanitizeFilename(name: string): string {
     .replace(/[^a-z0-9.\-_]/gi, '_')
 }
 </script>
-
-<style scoped>
-.qr-section__row {
-  gap: 24px 0;
-}
-
-@media (min-width: 960px) {
-  .qr-section__row>.v-col:first-child {
-    padding-right: 16px;
-  }
-
-  .qr-section__row>.v-col:last-child {
-    padding-left: 16px;
-  }
-}
-</style>

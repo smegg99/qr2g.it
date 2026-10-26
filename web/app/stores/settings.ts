@@ -2,7 +2,6 @@
 import { defineStore } from 'pinia'
 import {
   DEFAULT_THEME_MODE,
-  THEME_MODE,
   type ThemeMode,
 } from '~/types/config'
 import { DEFAULT_LOCALE, type LocaleCode } from '~/types/locale'
@@ -17,17 +16,6 @@ export const useSettingsStore = defineStore('settings', {
     themeMode: DEFAULT_THEME_MODE,
     language: DEFAULT_LOCALE,
   }),
-  getters: {
-    isDark(state): boolean {
-      if (state.themeMode === THEME_MODE.DARK) return true
-      if (state.themeMode === THEME_MODE.LIGHT) return false
-      if (typeof window === 'undefined') return true
-      return window.matchMedia?.('(prefers-color-scheme: dark)').matches ?? true
-    },
-    resolvedTheme(): 'dark' | 'light' {
-      return this.isDark ? 'dark' : 'light'
-    },
-  },
   actions: {
     setThemeMode(mode: ThemeMode) {
       this.themeMode = mode

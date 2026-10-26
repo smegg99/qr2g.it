@@ -1,0 +1,39 @@
+title:
+  value: O qr2g.it
+  description: Text shown in help / title
+close:
+  value: Zamknij
+  description: Text shown in help / close
+intro:
+  value: qr2g.it nadaje publicznemu repozytorium GitHub stały adres. Po zmianie nazwy lub właściciela krótki link może podążać za tą samą tożsamością repozytorium.
+  description: Text shown in help / intro
+howItWorks:
+  title:
+    value: Jak to działa
+    description: Text shown in help / howItWorks / title
+  step1:
+    value: Wklej dowolne publiczne repozytorium GitHub — owner/repo, github.com/owner/repo albo pełny URL.
+    description: Text shown in help / howItWorks / step1
+  step2:
+    value: Ustalamy jego stabilną tożsamość w GitHubie, czyli GraphQL Node ID repozytorium, i tworzymy krótki slug.
+    description: Text shown in help / howItWorks / step2
+  step3:
+    value: Jeśli repozytorium zostanie później przemianowane albo przeniesione, krótki link automatycznie podąży za nową lokalizacją.
+    description: Text shown in help / howItWorks / step3
+qr:
+  title:
+    value: Kody QR
+    description: Text shown in help / qr / title
+  customize:
+    value: Dostosuj kolor pierwszego planu i tła, poziom korekcji błędów, rozmiar, margines oraz zaokrąglenie rogów.
+    description: Text shown in help / qr / customize
+  export:
+    value: Eksportuj jako SVG, PNG lub JPG. Nazwy plików wynikają z krótkiego linku.
+    description: Text shown in help / qr / export
+privacy:
+  title:
+    value: Prywatność
+    description: Text shown in help / privacy / title
+  note:
+    value: Nie trzeba zakładać konta. Adres IP jest używany do limitów żądań i logów. Cloudflare Turnstile weryfikuje przesyłane linki.
+    description: Text shown in help / privacy / note

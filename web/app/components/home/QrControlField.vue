@@ -1,13 +1,17 @@
 <!-- app/components/home/QrControlField.vue -->
 <template>
-  <div class="d-flex flex-column ga-2">
-    <div class="text-caption text-medium-emphasis">
-      {{ label }}
+  <div class="control">
+    <div class="control__label">
+      <span>{{ label }}</span>
+      <span
+        v-if="hint"
+        class="control__hint"
+      >{{ hint }}</span>
     </div>
     <slot />
   </div>
 </template>
 
 <script setup lang="ts">
-defineProps<{ label: string }>()
+defineProps<{ label: string, hint?: string }>()
 </script>

@@ -1,27 +1,42 @@
 <!-- app/components/home/QrCanvas.vue -->
 <!-- eslint-disable vue/no-v-html -->
 <template>
-  <div class="d-flex flex-column ga-3">
-    <v-sheet class="qr-canvas" rounded="0" :style="canvasStyle">
-      <v-fade-transition mode="out-in">
-        <div v-if="snapshot" key="ready" class="qr-canvas__svg" v-html="snapshot.svg" />
-        <div v-else key="loading" class="qr-canvas__placeholder">
-          <v-progress-circular color="primary" indeterminate size="36" width="2" />
-        </div>
-      </v-fade-transition>
-    </v-sheet>
-
-    <div class="d-flex align-baseline justify-space-between ga-2">
-      <div class="text-caption text-medium-emphasis">
-        {{ t('home.qr.preview') }}
+  <figure class="preview">
+    <div class="preview__well">
+      <div
+        class="preview__code"
+        :style="canvasStyle"
+      >
+        <Transition
+          name="swap"
+          mode="out-in"
+        >
+          <div
+            v-if="snapshot"
+            key="ready"
+            class="preview__svg"
+            v-html="snapshot.svg"
+          />
+          <div
+            v-else
+            key="loading"
+            class="preview__svg"
+          >
+            <v-progress-circular
+              color="accent"
+              indeterminate
+              size="32"
+              width="2"
+            />
+          </div>
+        </Transition>
       </div>
-      <v-fade-transition>
-        <div v-if="snapshot" class="text-caption text-medium-emphasis">
-          {{ snapshot.modules }}×{{ snapshot.modules }} {{ t('home.qr.controls.modules') }}
-        </div>
-      </v-fade-transition>
     </div>
-  </div>
+    <figcaption class="preview__caption">
+      <span>{{ t('home.qr.preview') }}</span>
+      <span v-if="snapshot">{{ snapshot.pixelSize }} x {{ snapshot.pixelSize }} {{ t('home.qr.controls.px') }}</span>
+    </figcaption>
+  </figure>
 </template>
 
 <script setup lang="ts">
@@ -43,16 +58,16 @@ const canvasStyle = computed(() => ({
 </script>
 
 <style scoped>
-.qr-canvas {
+.preview__code {
   position: relative;
+  width: 100%;
   aspect-ratio: 1;
   overflow: hidden;
-  background: var(--qr-canvas-bg, rgb(var(--v-theme-surface)));
-  transition: border-radius 0.2s ease, box-shadow 0.4s ease;
+  background: var(--qr-canvas-bg);
+  transition: border-radius 0.2s ease;
 }
 
-.qr-canvas__svg,
-.qr-canvas__placeholder {
+.preview__svg {
   position: absolute;
   inset: 0;
   display: flex;
@@ -60,12 +75,10 @@ const canvasStyle = computed(() => ({
   justify-content: center;
 }
 
-.qr-canvas__svg :deep(svg) {
+.preview__svg :deep(svg) {
   display: block;
   width: 100%;
   height: 100%;
   shape-rendering: crispEdges;
-  image-rendering: pixelated;
-  image-rendering: crisp-edges;
 }
 </style>

@@ -1,140 +1,70 @@
-// nuxt.config.ts
-import fs from 'node:fs'
-import path from 'node:path'
+// web/nuxt.config.ts
+import { readFileSync, readdirSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
+import { palette } from '@smegg99/s99ab/theme'
 import vuetify, { transformAssetUrls } from 'vite-plugin-vuetify'
 import svgLoader from 'vite-svg-loader'
+import { BRAND } from './app/theme/brand'
 
-// Pull repo-root .env (one level above /web) into process.env so the same
-// TURNSTILE_SITE_KEY / QR2G_BACKEND_URL the Go backend reads is visible here.
-// /web/.env (if any) still wins because Nuxt loads it after this file is
-// evaluated; we only set keys that are not already defined.
-const here = path.dirname(fileURLToPath(import.meta.url))
-const rootEnvPath = path.join(here, '..', '.env')
-if (fs.existsSync(rootEnvPath)) {
-  for (const raw of fs.readFileSync(rootEnvPath, 'utf8').split(/\r?\n/)) {
-    const line = raw.trim()
-    if (!line || line.startsWith('#')) continue
-    const eq = line.indexOf('=')
-    if (eq < 1) continue
-    const key = line.slice(0, eq).trim()
-    if (!/^[A-Z_][A-Z0-9_]*$/.test(key)) continue
-    if (process.env[key] !== undefined) continue
-    let value = line.slice(eq + 1).trim()
-    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith('\'') && value.endsWith('\''))) {
-      value = value.slice(1, -1)
-    }
-    process.env[key] = value
-  }
+const version = readFileSync(fileURLToPath(new URL('../VERSION', import.meta.url)), 'utf8').trim()
+if (!/^\d+\.\d+\.\d+$/.test(version)) throw new Error('VERSION must contain MAJOR.MINOR.PATCH')
+const localeFiles = readdirSync(fileURLToPath(new URL('./i18n/generated/en', import.meta.url)))
+  .filter(file => file.endsWith('.json')).sort()
+const isDev = process.argv.includes('dev')
+const siteKey = process.env.NUXT_PUBLIC_TURNSTILE_SITE_KEY || process.env.TURNSTILE_SITE_KEY || (isDev ? '1x00000000000000000000AA' : '')
+const grounds = {
+  dark: palette({ name: BRAND.palette, dark: true, accent: BRAND.accent.dark, chroma: BRAND.chroma }).bg,
+  light: palette({ name: BRAND.palette, dark: false, accent: BRAND.accent.light, chroma: BRAND.chroma }).bg,
 }
 
-// Cloudflare's documented "always passes" test site key. Used only as a
-// `nuxt dev` fallback so release builds never silently ship a test widget.
-const TURNSTILE_TEST_SITE_KEY = '1x00000000000000000000AA'
-const isNuxtDev = process.argv.includes('dev')
-const configuredTurnstileSiteKey
-  = process.env.NUXT_PUBLIC_TURNSTILE_SITE_KEY
-    || process.env.TURNSTILE_SITE_KEY
-    || ''
-
-const turnstileSiteKey
-  = configuredTurnstileSiteKey === TURNSTILE_TEST_SITE_KEY && !isNuxtDev
-    ? ''
-    : configuredTurnstileSiteKey || (isNuxtDev ? TURNSTILE_TEST_SITE_KEY : '')
-
-const localeFiles = ['common.json']
-
 export default defineNuxtConfig({
-  modules: [
-    '@nuxtjs/i18n',
-    '@pinia/nuxt',
-    'pinia-plugin-persistedstate/nuxt',
-    '@nuxt/eslint',
-  ],
+  modules: ['@nuxtjs/i18n', '@pinia/nuxt', 'pinia-plugin-persistedstate/nuxt', '@nuxt/eslint'],
   ssr: false,
-  devtools: { enabled: true },
+  devtools: { enabled: false },
   app: {
-    pageTransition: { name: 'page', mode: 'out-in' },
+    pageTransition: false,
     head: {
       title: 'qr2g.it',
       meta: [
         { name: 'description', content: 'Permanent, QR-friendly short links for public GitHub repositories.' },
-        { name: 'theme-color', content: '#08090C' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' },
       ],
-      link: [
-        { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
-      ],
+      link: [{ rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' }],
+      script: [{
+        innerHTML: `(function(){try{var c=document.cookie.split('; ').find(function(x){return x.startsWith('qr2g.settings=')}),s=c?JSON.parse(decodeURIComponent(c.slice('qr2g.settings='.length))):{},m=s.themeMode||'auto',d=m==='dark'||(m==='auto'&&matchMedia('(prefers-color-scheme: dark)').matches),g=${JSON.stringify(grounds)};document.documentElement.style.backgroundColor=d?g.dark:g.light;document.documentElement.style.colorScheme=d?'dark':'light'}catch(e){}})()`,
+        tagPosition: 'head',
+      }],
     },
   },
-  css: [
-    '~/assets/css/fonts.css',
-    '~/assets/css/transitions.css',
-    '~/assets/css/vuetify.scss',
-  ],
-  runtimeConfig: {
-    public: {
-      apiBase: '/api/v1',
-      shortBase: 'https://qr2g.it',
-      turnstileSiteKey,
-    },
-  },
-  build: {
-    transpile: ['vuetify', '@material/material-color-utilities'],
-  },
-  devServer: { port: 5173 },
-  features: {
-    inlineStyles: false,
-  },
-  compatibilityDate: '2025-07-15',
-  nitro: {
-    compressPublicAssets: true,
-  },
+  css: ['~/assets/css/fonts.css', '~/assets/css/app.scss', '~/assets/css/site.css'],
+  runtimeConfig: { public: { apiBase: '/api/v1', shortBase: 'https://qr2g.it', turnstileSiteKey: siteKey, version } },
+  build: { transpile: ['vuetify', '@smegg99/s99ab'] },
+  devServer: { host: '127.0.0.1', port: 5173 },
+  features: { inlineStyles: false },
+  compatibilityDate: '2026-10-26',
+  nitro: { compressPublicAssets: true, prerender: { routes: ['/docs'] } },
   vite: {
-    optimizeDeps: {
-      include: ['vuetify', 'qrcode', '@firecms/neat'],
-    },
+    resolve: { alias: { '/s99ab/textures': fileURLToPath(new URL('./node_modules/@smegg99/s99ab/web/public/textures', import.meta.url)) } },
     plugins: [
-      vuetify({
-        autoImport: true,
-        styles: { configFile: 'assets/css/vuetify.scss' },
-      }),
-      svgLoader({
-        defaultImport: 'component',
-      }),
+      vuetify({ autoImport: true, styles: { configFile: 'assets/css/vuetify.scss' } }),
+      svgLoader({ defaultImport: 'component' }),
     ],
-    server: {
-      proxy: {
-        '/api': {
-          target: process.env.QR2G_BACKEND_URL || 'http://127.0.0.1:9245',
-          changeOrigin: true,
-        },
-      },
-    },
-    vue: {
-      template: {
-        transformAssetUrls,
-      },
-    },
+    server: { proxy: { '/api': { target: process.env.QR2G_BACKEND_URL || 'http://127.0.0.1:9245', changeOrigin: true } } },
+    vue: { template: { transformAssetUrls } },
   },
-  eslint: {
-    config: {
-      stylistic: true,
-    },
-  },
+  // Preserve the shared theme's nested calc() values; cssnano's calc parser rejects them.
+  postcss: { plugins: { cssnano: { preset: ['default', { calc: false }] } } },
+  eslint: { config: { stylistic: true } },
   i18n: {
     strategy: 'no_prefix',
     defaultLocale: 'en',
-    langDir: 'locales',
+    langDir: 'generated',
     locales: [
-      { code: 'en', name: 'English', language: 'en-GB', files: localeFiles.map(f => `en/${f}`) },
-      { code: 'pl', name: 'Polski', language: 'pl-PL', files: localeFiles.map(f => `pl/${f}`) },
+      { code: 'en', name: 'English', language: 'en-GB', files: localeFiles.map(file => `en/${file}`) },
+      { code: 'pl', name: 'Polski', language: 'pl-PL', files: localeFiles.map(file => `pl/${file}`) },
     ],
-    compilation: {
-      strictMessage: false,
-      escapeHtml: false,
-    },
+    compilation: { strictMessage: false, escapeHtml: false },
     detectBrowserLanguage: false,
-    vueI18n: './i18n/i18n.config.ts',
+    vueI18n: 'i18n.config.ts',
   },
 })

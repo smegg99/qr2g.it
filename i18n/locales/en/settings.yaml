@@ -1,0 +1,10 @@
+theme:
+  auto:
+    value: Auto
+    description: Text shown in settings / theme / auto
+  light:
+    value: Light
+    description: Text shown in settings / theme / light
+  dark:
+    value: Dark
+    description: Text shown in settings / theme / dark

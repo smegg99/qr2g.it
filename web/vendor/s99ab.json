@@ -1,0 +1,8 @@
+{
+  "package": "@smegg99/s99ab",
+  "version": "1.6.1",
+  "repository": "ssh://git@github.com/smegg99/S99AB.git",
+  "commit": "61f253f5edf227ba73a39d3c5c353a9d09dae430",
+  "archive": "s99ab-1.6.1.tgz",
+  "sha256": "1900e2a26e4fe1f4b457809e8ca26f7193c01823e26dfdb396c6219f706eaef5"
+}

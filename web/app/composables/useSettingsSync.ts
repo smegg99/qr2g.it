@@ -1,6 +1,5 @@
 // app/composables/useSettingsSync.ts
-import { useTheme } from 'vuetify'
-import { useDailyAccentHex, useMaterialAccentTheme } from '~/composables/useMaterialAccentTheme'
+import { useLocale, useTheme } from 'vuetify'
 import { useSettingsStore } from '~/stores/settings'
 import { THEME_MODE, type ThemeMode } from '~/types/config'
 import type { LocaleCode } from '~/types/locale'
@@ -8,22 +7,28 @@ import type { LocaleCode } from '~/types/locale'
 export function useSettingsSync() {
   const settings = useSettingsStore()
   const vuetifyTheme = useTheme()
+  const vuetifyLocale = useLocale()
   const { locale, setLocale } = useI18n()
-  const accentHex = useDailyAccentHex()
-  const accentTheme = useMaterialAccentTheme(accentHex)
 
   function applyTheme(mode: ThemeMode) {
     if (mode === THEME_MODE.AUTO) {
       const prefersDark = typeof window !== 'undefined'
         && window.matchMedia?.('(prefers-color-scheme: dark)').matches
-      vuetifyTheme.global.name.value = prefersDark ? 'dark' : 'light'
+      vuetifyTheme.change(prefersDark ? 'dark' : 'light')
     }
     else {
-      vuetifyTheme.global.name.value = mode
+      vuetifyTheme.change(mode)
+    }
+    if (import.meta.client) {
+      const name = vuetifyTheme.global.name.value
+      document.documentElement.style.colorScheme = name
+      const background = vuetifyTheme.themes.value[name]?.colors.background
+      if (typeof background === 'string') document.documentElement.style.backgroundColor = background
     }
   }
 
   function applyLocale(code: LocaleCode) {
+    vuetifyLocale.current.value = code
     if (locale.value !== code) setLocale(code)
   }
 
@@ -48,7 +53,5 @@ export function useSettingsSync() {
 
   return {
     settings,
-    accentHex,
-    accentColors: accentTheme.colors,
   }
 }

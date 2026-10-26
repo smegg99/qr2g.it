@@ -1,0 +1,120 @@
+title:
+  value: API curl
+  description: Text shown in docs / title
+intro:
+  value: Użyj curl, aby uzyskać stały link do GitHuba, odczytać metadane lub sprawdzić cel przekierowania. Bez SDK i bez konta.
+  description: Text shown in docs / intro
+contents:
+  value: Na tej stronie
+  description: Text shown in docs / contents
+copy:
+  value: Kopiuj polecenie
+  description: Text shown in docs / copy
+copied:
+  value: Skopiowano
+  description: Text shown in docs / copied
+copyFailed:
+  value: Nie udało się skopiować. Zaznacz polecenie i skopiuj je ręcznie.
+  description: Text shown in docs / copyFailed
+response:
+  value: Przykładowa odpowiedź
+  description: Text shown in docs / response
+swagger:
+  value: Otwórz interaktywną dokumentację API JSON
+  description: Text shown in docs / swagger
+short:
+  title:
+    value: Uzyskaj krótki link
+    description: Text shown in docs / short / title
+  text:
+    value: 'Zastąp smegg99/qr2g.it parą właściciel/repozytorium. Znane repozytorium zwraca dotychczasowy adres. Nowe publiczne repozytorium otrzymuje adres po sprawdzeniu w GitHubie. Odpowiedź to zwykły tekst: URL zakończony znakiem nowej linii.'
+    description: Text shown in docs / short / text
+  explicit:
+    value: 'curl jest rozpoznawany automatycznie. Dla innego klienta wyślij Accept: text/plain lub dodaj ?format=text. Otwarcie tej samej ścieżki repozytorium w przeglądarce przekieruje do krótkiego linku.'
+    description: Text shown in docs / short / explicit
+inspect:
+  title:
+    value: Odczytaj metadane
+    description: Text shown in docs / inspect / title
+  text:
+    value: Odczytaj zapisane metadane bez kontaktu z GitHubem. Zastąp 2 swoim identyfikatorem linku. JSON zawiera pierwotną i bieżącą nazwę repozytorium, cel, stan i daty weryfikacji.
+    description: Text shown in docs / inspect / text
+  info:
+    value: Znak plus po identyfikatorze zwraca te same metadane. Identyfikatory używają cyfr i wielkich liter systemu base36. Zachowaj wielkość liter.
+    description: Text shown in docs / inspect / info
+resolve:
+  title:
+    value: Sprawdź cel przekierowania
+    description: Text shown in docs / resolve / title
+  text:
+    value: Endpoint resolve zwraca JSON i weryfikuje nieaktualne aktywne linki w GitHubie. Gdy weryfikacja jest niedostępna, zwraca błąd zamiast ufać nieaktualnemu celowi.
+    description: Text shown in docs / resolve / text
+  redirect:
+    value: Aby sprawdzić zwykłe przekierowanie bez podążania za nim, wyświetl nagłówki odpowiedzi. Dodaj -L, jeśli curl ma podążać za przekierowaniami.
+    description: Text shown in docs / resolve / redirect
+create:
+  title:
+    value: Wyślij JSON
+    description: Text shown in docs / create / title
+  text:
+    value: Wyślij POST z pełnym adresem HTTPS repozytorium GitHub. Powyższe polecenie skrótowe jest najprostszą opcją w terminalu.
+    description: Text shown in docs / create / text
+  verification:
+    value: Publiczny endpoint POST wymaga świeżego tokenu Turnstile z weryfikacji w przeglądarce. Przypisz go do TURNSTILE_TOKEN. Token API konta Cloudflare go nie zastąpi. Tokenów weryfikacji nie można używać ponownie.
+    description: Text shown in docs / create / verification
+  result:
+    value: 'Odpowiedź jest w formacie JSON: 201 dla nowego linku lub 200 dla istniejącego. Nieznane, prywatne i nieprawidłowe repozytoria są odrzucane.'
+    description: Text shown in docs / create / result
+limits:
+  title:
+    value: Limity i błędy
+    description: Text shown in docs / limits / title
+  text:
+    value: Limity dotyczą adresu IP. Poniżej podano wartości domyślne wdrożenia. Operator może skonfigurować inne.
+    description: Text shown in docs / limits / text
+  shorthand:
+    value: 'Tworzenie linków do nowych repozytoriów przez ścieżkę skrótową: 5 na godzinę.'
+    description: Text shown in docs / limits / shorthand
+  post:
+    value: 'POST: 3 żądania na minutę i 50 zgłoszeń na dobę po sprawdzeniu formatu URL. Nieudana weryfikacja zużywa limit dobowy.'
+    description: Text shown in docs / limits / post
+  known:
+    value: Odczyt znanego repozytorium przez ścieżkę skrótową nie zużywa limitu tworzenia nowych linków.
+    description: Text shown in docs / limits / known
+  errors:
+    value: Błędy zawierają stały kod i komunikat. Użyj --fail-with-body, aby zachować odpowiedź JSON i jednocześnie zakończyć curl kodem błędu. Ta opcja wymaga curl 7.76.0 lub nowszego.
+    description: Text shown in docs / limits / errors
+  statuses:
+    value: Znaczenie odpowiedzi HTTP
+    description: Text shown in docs / limits / statuses
+  meaning:
+    value: Znaczenie
+    description: Text shown in docs / limits / meaning
+status:
+  '200':
+    value: Istniejący link lub poprawna odpowiedź metadanych albo resolve.
+    description: Text shown in docs / status / 200
+  '201':
+    value: Utworzono nowy link.
+    description: Text shown in docs / status / 201
+  '302':
+    value: Przeglądarka lub krótki link są przekierowywane.
+    description: Text shown in docs / status / 302
+  '400':
+    value: Treść JSON lub adres repozytorium są nieprawidłowe.
+    description: Text shown in docs / status / 400
+  '403':
+    value: Repozytorium jest prywatne albo brakuje poprawnej weryfikacji Turnstile.
+    description: Text shown in docs / status / 403
+  '404':
+    value: Nie znaleziono repozytorium lub krótkiego linku.
+    description: Text shown in docs / status / 404
+  '410':
+    value: Zapisany link nie jest już aktywny.
+    description: Text shown in docs / status / 410
+  '429':
+    value: Osiągnięto limit żądań dla Twojego IP.
+    description: Text shown in docs / status / 429
+  '503':
+    value: GitHub, Turnstile lub weryfikacja repozytorium są tymczasowo niedostępne.
+    description: Text shown in docs / status / 503

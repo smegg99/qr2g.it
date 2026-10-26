@@ -1,16 +1,38 @@
 <!-- app/components/home/ColorField.vue -->
 <template>
-  <v-text-field :id="id" v-model="hex" :aria-label="label" density="comfortable" hide-details spellcheck="false"
-    autocomplete="off" @blur="commit" @keydown.enter="commit">
+  <v-text-field
+    :id="id"
+    v-model="hex"
+    :aria-label="label"
+    density="compact"
+    hide-details
+    spellcheck="false"
+    autocomplete="off"
+    @blur="commit"
+    @keydown.enter="commit"
+  >
     <template #prepend-inner>
-      <v-menu v-model="open" :close-on-content-click="false" location="bottom start">
+      <v-menu
+        v-model="open"
+        :close-on-content-click="false"
+        location="bottom start"
+      >
         <template #activator="{ props: menuProps }">
-          <v-btn v-bind="menuProps" :color="normalized" :aria-label="label" class="color-swatch" variant="flat"
-            density="compact" size="x-small" rounded="md" />
+          <button
+            v-bind="menuProps"
+            type="button"
+            :aria-label="label"
+            :style="{ background: normalized }"
+            class="color-swatch"
+          />
         </template>
 
-        <v-card rounded="md" class="color-swatch__menu">
-          <v-color-picker v-model="pickerValue" mode="hex" hide-inputs />
+        <v-card class="color-swatch__menu">
+          <v-color-picker
+            v-model="pickerValue"
+            mode="hex"
+            hide-inputs
+          />
         </v-card>
       </v-menu>
     </template>
@@ -64,10 +86,12 @@ function commitValue(value: string) {
 
 <style scoped>
 .color-swatch {
+  flex: 0 0 auto;
   width: 22px;
-  min-width: 22px;
   height: 22px;
-  border: thin solid rgba(var(--v-theme-on-surface), 0.18);
+  border: 1px solid rgb(var(--v-theme-edge));
+  border-radius: 3px;
+  cursor: pointer;
 }
 
 .color-swatch__menu {

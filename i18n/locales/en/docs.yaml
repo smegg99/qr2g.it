@@ -1,0 +1,120 @@
+title:
+  value: curl API
+  description: Text shown in docs / title
+intro:
+  value: Use curl to get a permanent GitHub link, inspect its metadata, or check where it leads. No SDK or account required.
+  description: Text shown in docs / intro
+contents:
+  value: On this page
+  description: Text shown in docs / contents
+copy:
+  value: Copy command
+  description: Text shown in docs / copy
+copied:
+  value: Copied
+  description: Text shown in docs / copied
+copyFailed:
+  value: Could not copy. Select and copy the command instead.
+  description: Text shown in docs / copyFailed
+response:
+  value: Example response
+  description: Text shown in docs / response
+swagger:
+  value: Open the interactive JSON API reference
+  description: Text shown in docs / swagger
+short:
+  title:
+    value: Get a short link
+    description: Text shown in docs / short / title
+  text:
+    value: Replace smegg99/qr2g.it with owner/repo. A known repository returns its existing address; a new public repository gets one after a GitHub lookup. The response is a plain-text URL followed by a newline.
+    description: Text shown in docs / short / text
+  explicit:
+    value: 'curl is recognized automatically. For another client, send Accept: text/plain or add ?format=text. Opening the same repository path in a browser redirects to its short link.'
+    description: Text shown in docs / short / explicit
+inspect:
+  title:
+    value: Inspect a link
+    description: Text shown in docs / inspect / title
+  text:
+    value: Read stored metadata without contacting GitHub. Replace 2 with your slug. The JSON includes the initial and current repository names, destination, state, and verification times.
+    description: Text shown in docs / inspect / text
+  info:
+    value: A plus sign after the slug returns the same metadata. Slugs use uppercase base36; keep their case.
+    description: Text shown in docs / inspect / info
+resolve:
+  title:
+    value: Check the destination
+    description: Text shown in docs / resolve / title
+  text:
+    value: The resolve endpoint returns JSON and verifies stale active links against GitHub. If verification is unavailable, it returns an error instead of trusting an outdated destination.
+    description: Text shown in docs / resolve / text
+  redirect:
+    value: To inspect the normal short-link redirect without following it, print its response headers. Add -L to curl when you want to follow redirects.
+    description: Text shown in docs / resolve / redirect
+create:
+  title:
+    value: Submit JSON
+    description: Text shown in docs / create / title
+  text:
+    value: POST a complete HTTPS GitHub repository URL. The shorthand command above is the simplest option for terminal use.
+    description: Text shown in docs / create / text
+  verification:
+    value: The public POST endpoint requires a fresh Turnstile token from a browser challenge. Set TURNSTILE_TOKEN to that token. A Cloudflare account API token is not a substitute, and verification tokens cannot be reused.
+    description: Text shown in docs / create / verification
+  result:
+    value: 'The response is JSON: 201 for a newly created link or 200 for an existing one. Unknown, private, or invalid repositories are rejected.'
+    description: Text shown in docs / create / result
+limits:
+  title:
+    value: Limits and errors
+    description: Text shown in docs / limits / title
+  text:
+    value: Limits apply per IP. These are the deployment defaults; an operator can configure different limits.
+    description: Text shown in docs / limits / text
+  shorthand:
+    value: 'Creating a previously unknown repository through the shorthand route: 5 per hour.'
+    description: Text shown in docs / limits / shorthand
+  post:
+    value: 'POST: 3 requests per minute and 50 submissions per day after URL validation. Failed verification counts toward the daily allowance.'
+    description: Text shown in docs / limits / post
+  known:
+    value: Looking up an existing repository through the shorthand route does not use the cold-create allowance.
+    description: Text shown in docs / limits / known
+  errors:
+    value: Errors contain a stable error code and a message. Use --fail-with-body to keep the JSON response while making curl exit with an error. This option requires curl 7.76.0 or newer.
+    description: Text shown in docs / limits / errors
+  statuses:
+    value: HTTP response meanings
+    description: Text shown in docs / limits / statuses
+  meaning:
+    value: Meaning
+    description: Text shown in docs / limits / meaning
+status:
+  '200':
+    value: Existing link or successful metadata/resolve response.
+    description: Text shown in docs / status / 200
+  '201':
+    value: A new link was created.
+    description: Text shown in docs / status / 201
+  '302':
+    value: A browser or short link is being redirected.
+    description: Text shown in docs / status / 302
+  '400':
+    value: The JSON body or repository URL is invalid.
+    description: Text shown in docs / status / 400
+  '403':
+    value: The repository is private, or Turnstile verification is missing or failed.
+    description: Text shown in docs / status / 403
+  '404':
+    value: The repository or short link was not found.
+    description: Text shown in docs / status / 404
+  '410':
+    value: The stored link is no longer active.
+    description: Text shown in docs / status / 410
+  '429':
+    value: Your IP reached a request limit.
+    description: Text shown in docs / status / 429
+  '503':
+    value: GitHub, Turnstile, or repository verification is temporarily unavailable.
+    description: Text shown in docs / status / 503
