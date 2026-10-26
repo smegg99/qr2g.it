@@ -3,23 +3,22 @@
 package repositories
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
-
-	"github.com/jackc/pgx/v5"
 )
 
 // ErrNotFound is returned when a row is not present.
 var ErrNotFound = errors.New("repositories: not found")
 
-// row is the minimal interface satisfied by pgx.Row and pgx.Rows.
+// row is the minimal interface satisfied by sql.Row and sql.Rows.
 type row interface {
 	Scan(dest ...any) error
 }
 
-// mapErr translates pgx's sentinel into the repository-level not-found.
+// mapErr translates database/sql's sentinel into the repository-level not-found.
 func mapErr(err error) error {
-	if errors.Is(err, pgx.ErrNoRows) {
+	if errors.Is(err, sql.ErrNoRows) {
 		return ErrNotFound
 	}
 	return err

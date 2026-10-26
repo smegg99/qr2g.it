@@ -1,17 +1,15 @@
-# sqlc config. The hand-written core/repositories package is the active data
-# layer; this file lets you regenerate code from the queries with
-# `sqlc generate` if you prefer codegen over hand-rolled pgx queries. The
-# two paths are intentionally compatible.
+# sqlc.yaml
+# Optional query generation; core/repositories owns the active data layer.
 version: "2"
 sql:
   - schema: "core/datastore/migrations"
     queries: "core/datastore/queries"
-    engine: "postgresql"
+    engine: "sqlite"
     gen:
       go:
         package: "sqlcgen"
         out: "core/repositories/sqlcgen"
-        sql_package: "pgx/v5"
+        sql_package: "database/sql"
         emit_json_tags: false
         emit_pointers_for_null_types: true
         emit_enum_valid_method: false

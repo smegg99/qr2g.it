@@ -3,9 +3,7 @@
 // @title           qr2g.it API
 // @version         1.0
 // @description     Permanent, QR-friendly short links for public GitHub repositories.
-// @description     Slugs are uppercase base36 of the link's id; the canonical
-// @description     short URL uses the uppercase host (QR-optimised) while the
-// @description     redirect target is the lowercase public host.
+// @description     Slugs are uppercase base36 of the link's id. Short URLs use the configured public origin.
 // @license.name    MIT
 // @license.url     https://github.com/smegg99/qr2g.it/blob/main/LICENSE
 // @BasePath        /

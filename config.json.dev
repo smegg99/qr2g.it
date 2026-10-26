@@ -1,11 +1,7 @@
 {
   "db": {
     "auto_migrate": true,
-    "connect_timeout_seconds": 10,
-    "health_check_period_seconds": 60,
-    "max_conns": 10,
-    "min_conns": 1,
-    "url": "@{env?:DATABASE_URL}"
+    "path": "data/qr2git.sqlite"
   },
   "github": {
     "api_version": "2026-03-10",

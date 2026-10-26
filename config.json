@@ -1,11 +1,7 @@
 {
   "db": {
     "auto_migrate": true,
-    "connect_timeout_seconds": 10,
-    "health_check_period_seconds": 60,
-    "max_conns": 10,
-    "min_conns": 1,
-    "url": "@{env?:DATABASE_URL}"
+    "path": "data/qr2git.sqlite"
   },
   "github": {
     "api_version": "2026-03-10",
@@ -38,7 +34,7 @@
     "shorthand_per_hour": 5
   },
   "server": {
-    "canonical_base_url": "HTTPS://QR2G.IT",
+    "canonical_base_url": "https://qr2g.it",
     "gin_mode": "release",
     "idle_timeout_seconds": 60,
     "listen_addr": "127.0.0.1:8080",

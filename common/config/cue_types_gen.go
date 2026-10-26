@@ -47,17 +47,9 @@ type ServerConfig struct {
 }
 
 type DBConfig struct {
-	URL string `json:"url"`
-
-	MaxConns int64 `json:"max_conns"`
-
-	MinConns int64 `json:"min_conns"`
+	Path string `json:"path"`
 
 	AutoMigrate bool `json:"auto_migrate"`
-
-	HealthCheckPeriodSeconds int64 `json:"health_check_period_seconds"`
-
-	ConnectTimeoutSeconds int64 `json:"connect_timeout_seconds"`
 }
 
 type GithubConfig struct {

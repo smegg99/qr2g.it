@@ -47,9 +47,7 @@ info:
   contact: {}
   description: |-
     Permanent, QR-friendly short links for public GitHub repositories.
-    Slugs are uppercase base36 of the link's id; the canonical
-    short URL uses the uppercase host (QR-optimised) while the
-    redirect target is the lowercase public host.
+    Slugs are uppercase base36 of the link's id. Short URLs use the configured public origin.
   license:
     name: MIT
     url: https://github.com/smegg99/qr2g.it/blob/main/LICENSE
@@ -176,7 +174,7 @@ paths:
       - meta
   /ready:
     get:
-      description: Pings the Postgres pool with a 2s timeout.
+      description: Pings SQLite with a 2s timeout.
       produces:
       - application/json
       responses:

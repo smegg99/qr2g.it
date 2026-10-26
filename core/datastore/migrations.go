@@ -4,6 +4,7 @@ package datastore
 
 import (
 	"context"
+	"database/sql"
 	"embed"
 	"fmt"
 	"io/fs"
@@ -19,14 +20,11 @@ var migrationsFS embed.FS
 const schemaMigrationsTable = `
 CREATE TABLE IF NOT EXISTS schema_migrations (
     name text PRIMARY KEY,
-    applied_at timestamptz NOT NULL DEFAULT now()
+    applied_at datetime NOT NULL DEFAULT (strftime('%Y-%m-%d %H:%M:%f', 'now'))
 )`
 
-func runMigrations(ctx context.Context) error {
-	if pool == nil {
-		return fmt.Errorf("migrations: pool not ready")
-	}
-	if _, err := pool.Exec(ctx, schemaMigrationsTable); err != nil {
+func runMigrations(ctx context.Context, db *sql.DB) error {
+	if _, err := db.ExecContext(ctx, schemaMigrationsTable); err != nil {
 		return fmt.Errorf("create schema_migrations: %w", err)
 	}
 
@@ -36,7 +34,7 @@ func runMigrations(ctx context.Context) error {
 	}
 
 	for _, name := range names {
-		applied, err := isMigrationApplied(ctx, name)
+		applied, err := isMigrationApplied(ctx, db, name)
 		if err != nil {
 			return fmt.Errorf("check %s: %w", name, err)
 		}
@@ -44,7 +42,7 @@ func runMigrations(ctx context.Context) error {
 			logger.Debug().Str("migration", name).Msg("migration already applied")
 			continue
 		}
-		if err := applyMigration(ctx, name); err != nil {
+		if err := applyMigration(ctx, db, name); err != nil {
 			return err
 		}
 		logger.Info().Str("migration", name).Msg("migration applied")
@@ -68,42 +66,45 @@ func listMigrations() ([]string, error) {
 		names = append(names, e.Name())
 	}
 	sort.Strings(names)
+	if len(names) == 0 {
+		return nil, fmt.Errorf("migrations: no embedded SQL files")
+	}
 	return names, nil
 }
 
-func isMigrationApplied(ctx context.Context, name string) (bool, error) {
+func isMigrationApplied(ctx context.Context, db *sql.DB, name string) (bool, error) {
 	var exists bool
-	err := pool.QueryRow(ctx,
-		`SELECT EXISTS(SELECT 1 FROM schema_migrations WHERE name = $1)`,
+	err := db.QueryRowContext(ctx,
+		`SELECT EXISTS(SELECT 1 FROM schema_migrations WHERE name = ?1)`,
 		name,
 	).Scan(&exists)
 	return exists, err
 }
 
-func applyMigration(ctx context.Context, name string) error {
+func applyMigration(ctx context.Context, db *sql.DB, name string) error {
 	body, err := migrationsFS.ReadFile("migrations/" + name)
 	if err != nil {
 		return fmt.Errorf("read %s: %w", name, err)
 	}
 
-	tx, err := pool.Begin(ctx)
+	tx, err := db.BeginTx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("begin %s: %w", name, err)
 	}
 	defer func() {
-		_ = tx.Rollback(ctx)
+		_ = tx.Rollback()
 	}()
 
-	if _, err := tx.Exec(ctx, string(body)); err != nil {
+	if _, err := tx.ExecContext(ctx, string(body)); err != nil {
 		return fmt.Errorf("apply %s: %w", name, err)
 	}
-	if _, err := tx.Exec(ctx,
-		`INSERT INTO schema_migrations (name) VALUES ($1)`,
+	if _, err := tx.ExecContext(ctx,
+		`INSERT INTO schema_migrations (name) VALUES (?1)`,
 		name,
 	); err != nil {
 		return fmt.Errorf("record %s: %w", name, err)
 	}
-	if err := tx.Commit(ctx); err != nil {
+	if err := tx.Commit(); err != nil {
 		return fmt.Errorf("commit %s: %w", name, err)
 	}
 	return nil

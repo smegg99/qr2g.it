@@ -1,102 +1,89 @@
 // core/datastore/datastore.go
-
 package datastore
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
+	"net/url"
+	"os"
+	"path/filepath"
 	"sync"
 	"time"
 
-	"github.com/jackc/pgx/v5/pgxpool"
+	_ "modernc.org/sqlite"
 
 	"smegg.me/qr2g.it/common/config"
 	"smegg.me/qr2g.it/common/logger"
 )
 
 var (
-	pool      *pgxpool.Pool
-	connStr   string
-	initOnce  sync.Once
-	closeOnce sync.Once
+	pool *sql.DB
+	mu   sync.Mutex
 )
 
-func applyPoolSettings(p *pgxpool.Config, cfg config.DBConfig) {
-	if cfg.MaxConns > 0 {
-		p.MaxConns = int32(cfg.MaxConns)
+// Open opens a file-backed SQLite database and optionally applies migrations.
+func Open(ctx context.Context, path string, autoMigrate bool) (*sql.DB, error) {
+	if path == "" {
+		return nil, errors.New("datastore: database path is empty")
 	}
-	if cfg.MinConns >= 0 {
-		p.MinConns = int32(cfg.MinConns)
+	path, err := filepath.Abs(path)
+	if err != nil {
+		return nil, fmt.Errorf("database path: %w", err)
 	}
-	if cfg.HealthCheckPeriodSeconds > 0 {
-		p.HealthCheckPeriod = time.Duration(cfg.HealthCheckPeriodSeconds) * time.Second
+	if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
+		return nil, fmt.Errorf("create database directory: %w", err)
 	}
-	if cfg.ConnectTimeoutSeconds > 0 {
-		p.ConnConfig.ConnectTimeout = time.Duration(cfg.ConnectTimeoutSeconds) * time.Second
+	u := url.URL{Scheme: "file", Path: path}
+	q := url.Values{}
+	q.Add("_pragma", "busy_timeout(10000)")
+	q.Add("_pragma", "foreign_keys(1)")
+	q.Add("_pragma", "journal_mode(WAL)")
+	q.Set("_txlock", "immediate")
+	q.Set("_time_format", "sqlite")
+	u.RawQuery = q.Encode()
+	db, err := sql.Open("sqlite", u.String())
+	if err != nil {
+		return nil, fmt.Errorf("open database: %w", err)
 	}
+	// Serialize this process's writes; immediate transactions also protect other processes.
+	db.SetMaxOpenConns(1)
+	db.SetMaxIdleConns(1)
+	if err := db.PingContext(ctx); err != nil {
+		db.Close()
+		return nil, fmt.Errorf("ping database: %w", err)
+	}
+	if autoMigrate {
+		if err := runMigrations(ctx, db); err != nil {
+			db.Close()
+			return nil, fmt.Errorf("migrate database: %w", err)
+		}
+	}
+	return db, nil
 }
 
-// Initialize opens the Postgres connection pool, pings it, and runs any
-// pending migrations when auto_migrate is enabled in config.
+// Initialize opens the configured SQLite database.
 func Initialize(ctx context.Context) error {
-	var initErr error
-	initOnce.Do(func() {
-		cfg := config.Get().Db
-		if cfg.URL == "" {
-			initErr = errors.New("datastore: DATABASE_URL not set")
-			return
-		}
-
-		logger.Info().Msg("initializing datastore")
-		logger.Debug().Msg("parsing pool configuration")
-
-		poolCfg, err := pgxpool.ParseConfig(cfg.URL)
-		if err != nil {
-			initErr = fmt.Errorf("parse db url: %w", err)
-			return
-		}
-		applyPoolSettings(poolCfg, cfg)
-
-		connStr = cfg.URL
-
-		connectCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
-		defer cancel()
-
-		logger.Debug().Int("max_conns", int(poolCfg.MaxConns)).Msg("opening pool")
-
-		p, err := pgxpool.NewWithConfig(connectCtx, poolCfg)
-		if err != nil {
-			initErr = fmt.Errorf("connect db: %w", err)
-			return
-		}
-
-		if err := p.Ping(connectCtx); err != nil {
-			p.Close()
-			initErr = fmt.Errorf("ping db: %w", err)
-			return
-		}
-
-		pool = p
-		logger.Info().Msg("datastore connected")
-
-		if cfg.AutoMigrate {
-			logger.Info().Msg("running migrations")
-			if err := runMigrations(ctx); err != nil {
-				p.Close()
-				pool = nil
-				initErr = fmt.Errorf("migrate: %w", err)
-				return
-			}
-		}
-
-		logger.Info().Msg("datastore ready")
-	})
-	return initErr
+	mu.Lock()
+	defer mu.Unlock()
+	if pool != nil {
+		return nil
+	}
+	cfg := config.Get().Db
+	connectCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+	db, err := Open(connectCtx, cfg.Path, cfg.AutoMigrate)
+	if err != nil {
+		return err
+	}
+	pool = db
+	logger.Info().Msg("SQLite datastore ready")
+	return nil
 }
 
-// Get returns the shared pgx pool. Panics if Initialize has not run.
-func Get() *pgxpool.Pool {
+// Get returns the initialized shared database.
+func Get() *sql.DB {
 	if pool == nil {
 		panic("datastore: not initialised, call Initialize first")
 	}
@@ -108,15 +95,15 @@ func Ping(ctx context.Context) error {
 	if pool == nil {
 		return errors.New("datastore: not initialised")
 	}
-	return pool.Ping(ctx)
+	return pool.PingContext(ctx)
 }
 
-// Close releases the pool. Safe to call multiple times.
+// Close releases the shared database.
 func Close() {
-	closeOnce.Do(func() {
-		if pool != nil {
-			pool.Close()
-			pool = nil
-		}
-	})
+	mu.Lock()
+	defer mu.Unlock()
+	if pool != nil {
+		pool.Close()
+		pool = nil
+	}
 }

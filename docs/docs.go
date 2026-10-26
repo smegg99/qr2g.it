@@ -195,7 +195,7 @@ const docTemplate = `{
         },
         "/ready": {
             "get": {
-                "description": "Pings the Postgres pool with a 2s timeout.",
+                "description": "Pings SQLite with a 2s timeout.",
                 "produces": [
                     "application/json"
                 ],
@@ -303,7 +303,7 @@ var SwaggerInfo = &swag.Spec{
 	BasePath:         "/",
 	Schemes:          []string{"http", "https"},
 	Title:            "qr2g.it API",
-	Description:      "Permanent, QR-friendly short links for public GitHub repositories.\nSlugs are uppercase base36 of the link's id; the canonical\nshort URL uses the uppercase host (QR-optimised) while the\nredirect target is the lowercase public host.",
+	Description:      "Permanent, QR-friendly short links for public GitHub repositories.\nSlugs are uppercase base36 of the link's id. Short URLs use the configured public origin.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

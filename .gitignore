@@ -3,3 +3,4 @@ secrets
 bin/
 release/
 *.tar.gz
+data/

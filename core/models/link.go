@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-// State mirrors the link_state Postgres enum.
+// State identifies the repository availability.
 type State string
 
 const (
@@ -18,7 +18,7 @@ const (
 	StateUnavailable State = "unavailable"
 )
 
-// Scan implements sql.Scanner for Postgres enum values.
+// Scan implements sql.Scanner.
 func (s *State) Scan(src any) error {
 	switch v := src.(type) {
 	case string:

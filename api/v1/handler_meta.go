@@ -38,7 +38,7 @@ func (s *Server) handleHealth(c *gin.Context) {
 // handleReady implements GET /ready.
 //
 // @Summary      Readiness probe
-// @Description  Pings the Postgres pool with a 2s timeout.
+// @Description  Pings SQLite with a 2s timeout.
 // @Tags         meta
 // @Produce      json
 // @Success      200  {object}  map[string]string
