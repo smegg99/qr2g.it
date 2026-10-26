@@ -126,10 +126,14 @@ export function useShortLink() {
     if (!turnstileToken && turnstile.isConfigured) {
       try {
         const t = await turnstile.getToken()
-        if (t) turnstileToken = t
+        if (!t) throw new Error('turnstile: empty token')
+        turnstileToken = t
       }
-      catch {
-        // Fall through; backend will respond with turnstile_required and we'll surface it.
+      catch (err) {
+        error.value = { code: 'turnstile_unavailable', message: String(err) }
+        loading.value = false
+        abort = null
+        return null
       }
     }
 

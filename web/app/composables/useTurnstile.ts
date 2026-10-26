@@ -6,7 +6,6 @@ interface TurnstileWindow {
     reset: (id: string) => void
     remove: (id: string) => void
     execute: (id: string) => void
-    getResponse: (id?: string) => string | undefined
   }
 }
 
@@ -17,11 +16,13 @@ interface TurnstileRenderOptions {
   'appearance'?: 'always' | 'execute' | 'interaction-only'
   'action'?: string
   'retry'?: 'auto' | 'never'
+  'retry-interval'?: number
   'refresh-expired'?: 'auto' | 'manual' | 'never'
   'callback'?: (token: string) => void
-  'error-callback'?: (err: unknown) => void
+  'error-callback'?: (err: unknown) => boolean
   'expired-callback'?: () => void
   'timeout-callback'?: () => void
+  'unsupported-callback'?: () => void
 }
 
 const SCRIPT_URL = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit'
@@ -39,55 +40,50 @@ function loadScript(): Promise<void> {
   if (tw.turnstile) return Promise.resolve()
   if (scriptPromise) return scriptPromise
 
+  const script = document.querySelector<HTMLScriptElement>(`script[src^="${SCRIPT_URL.split('?')[0]}"]`)
+    ?? document.createElement('script')
   scriptPromise = new Promise<void>((resolve, reject) => {
-    const existing = document.querySelector<HTMLScriptElement>(`script[src^="${SCRIPT_URL.split('?')[0]}"]`)
-    if (existing) {
-      existing.addEventListener('load', () => resolve(), { once: true })
-      existing.addEventListener('error', () => reject(new Error('turnstile: script load failed')), { once: true })
-      return
+    script.addEventListener('load', () => resolve(), { once: true })
+    script.addEventListener('error', () => reject(new Error('turnstile: script load failed')), { once: true })
+    if (!script.src) {
+      script.src = SCRIPT_URL
+      script.async = true
+      script.defer = true
+      document.head.appendChild(script)
     }
-    const s = document.createElement('script')
-    s.src = SCRIPT_URL
-    s.async = true
-    s.defer = true
-    s.onload = () => resolve()
-    s.onerror = () => reject(new Error('turnstile: script load failed'))
-    document.head.appendChild(s)
+  }).catch((err: unknown) => {
+    script.remove()
+    scriptPromise = null
+    throw err
   })
   return scriptPromise
 }
 
 function ensureContainer(): HTMLElement {
-  let el = document.getElementById(CONTAINER_ID)
-  if (el) return el
-  el = document.createElement('div')
-  el.id = CONTAINER_ID
-  el.setAttribute('aria-hidden', 'true')
-  Object.assign(el.style, {
-    position: 'fixed',
-    right: '0',
-    bottom: '0',
-    width: '0',
-    height: '0',
-    overflow: 'hidden',
-    opacity: '0',
-    pointerEvents: 'none',
-    zIndex: '-1',
-  } as Partial<CSSStyleDeclaration>)
-  document.body.appendChild(el)
+  const el = document.getElementById(CONTAINER_ID)
+  if (!el) throw new Error('turnstile: container not mounted')
   return el
+}
+
+function removeWidget() {
+  if (widgetId) {
+    (window as unknown as TurnstileWindow).turnstile?.remove(widgetId)
+    widgetId = null
+  }
 }
 
 function settleResolve(token: string) {
   pendingResolve?.(token)
   pendingResolve = null
   pendingReject = null
+  removeWidget()
 }
 
 function settleReject(err: Error) {
   pendingReject?.(err)
   pendingResolve = null
   pendingReject = null
+  removeWidget()
 }
 
 export function useTurnstile() {
@@ -99,32 +95,32 @@ export function useTurnstile() {
     if (!isConfigured) return null
     if (typeof window === 'undefined') return null
 
-    try {
-      await loadScript()
-    }
-    catch {
-      return null
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        await loadScript()
+        break
+      }
+      catch (err) {
+        if (attempt === 1) throw err
+      }
     }
     const turnstile = (window as unknown as TurnstileWindow).turnstile
-    if (!turnstile) return null
+    if (!turnstile) throw new Error('turnstile: API unavailable')
 
     return new Promise<string>((resolve, reject) => {
       pendingReject?.(new Error('turnstile: superseded by a new request'))
+      removeWidget()
       pendingResolve = resolve
       pendingReject = reject
 
       const onCallback = (token: string) => settleResolve(token)
-      const onError = (err: unknown) => settleReject(new Error(`turnstile: ${String(err)}`))
-
-      if (widgetId) {
-        try {
-          turnstile.reset(widgetId)
-          turnstile.execute(widgetId)
-        }
-        catch (err) {
-          settleReject(err as Error)
-        }
-        return
+      let failures = 0
+      const onError = (err: unknown) => {
+        const code = String(err)
+        const retryable = /^(300|600)/.test(code) || ['200500', '110600', '110620'].includes(code)
+        const terminal = !retryable || ++failures >= 3
+        if (terminal) settleReject(new Error(`turnstile: ${code}`))
+        return !terminal
       }
 
       try {
@@ -134,6 +130,7 @@ export function useTurnstile() {
           'appearance': 'execute',
           'action': ACTION,
           'retry': 'auto',
+          'retry-interval': 1000,
           'refresh-expired': 'auto',
           'callback': onCallback,
           'error-callback': onError,
@@ -147,6 +144,7 @@ export function useTurnstile() {
             }
           },
           'timeout-callback': () => settleReject(new Error('turnstile: challenge timed out')),
+          'unsupported-callback': () => settleReject(new Error('turnstile: browser unsupported')),
         })
         turnstile.execute(widgetId)
       }
