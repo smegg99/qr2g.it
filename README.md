@@ -14,7 +14,7 @@ Permanent short links and QR codes for public GitHub repositories. A link is tie
 - Node.js 22.19+, 24.11+, or 26+ and pnpm 10.31.0, selected by `web/package.json`.
 - A writable directory for SQLite. No PostgreSQL server is required.
 - Python 3 for the generated-file checks and PostgreSQL dump importer.
-- `just` for the command recipes. `sqlite3` and `sqlc` are only needed for their optional recipes.
+- `just` for the command recipes. `sqlite3` is optional for `just db-shell`.
 
 The frontend uses S99AB's graphite theme and stylesheet with the same compact, flat controls as Goptivum-Desktop and SmeggTuner. Its pinned package archive and source provenance are under `web/vendor/`, so a VPS build does not require a sibling checkout or private GitHub credentials. pnpm remains this repository's package manager.
 

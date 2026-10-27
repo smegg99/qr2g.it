@@ -8,7 +8,7 @@ release_name := app_name + "-v" + version + "-linux-amd64"
 default:
     @just --list
 
-# Install the pinned frontend and Go dependencies.
+# Install frontend and Go dependencies.
 install:
     pnpm --dir web install --frozen-lockfile
     go mod download
@@ -24,7 +24,7 @@ check-fmt:
     unformatted="$(gofmt -l main.go api common core internal schema docs)"
     if [[ -n "$unformatted" ]]; then printf '%s\n' "$unformatted" >&2; exit 1; fi
 
-# Format Go and frontend source; generated files stay generator-owned.
+# Format Go and frontend source.
 fmt:
     gofmt -w main.go api common core internal schema docs
     pnpm --dir web exec eslint . --fix
@@ -73,7 +73,7 @@ check-generated:
 # Build the static site and embed it in the Go binary.
 build: build-web build-api
 
-# Generate the production frontend from the current locale sources.
+# Build the production frontend.
 build-web:
     pnpm --dir web build
     mkdir -p internal/frontend/dist
@@ -84,7 +84,7 @@ build-api:
     mkdir -p {{bin_dir}}
     CGO_ENABLED=0 go build -trimpath -ldflags '-s -w' -o {{bin_dir}}/{{app_name}} .
 
-# Run the API and Nuxt dev server; stop only the process groups this recipe owns.
+# Run the API and Nuxt dev server.
 dev: build-api
     #!/usr/bin/env bash
     set -euo pipefail
@@ -113,7 +113,7 @@ run:
 run-dev:
     CONFIG_PATH=config.json.dev go run .
 
-# Package a portable Linux release without deleting an earlier release tree.
+# Package a portable Linux release.
 release: build-web
     #!/usr/bin/env bash
     set -euo pipefail
@@ -133,14 +133,10 @@ db-shell:
 migrate:
     go run .
 
-# Generate the optional SQL query package.
-gen-sqlc:
-    sqlc generate
-
 # Regenerate the existing Swagger reference from Go annotations.
 gen-swagger:
     go tool swag init -g main.go --output docs --parseInternal
 
-# Resolve the Go module graph without changing application behavior.
+# Resolve the Go module graph.
 tidy:
     go mod tidy
