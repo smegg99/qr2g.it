@@ -151,13 +151,13 @@ onBeforeUnmount(() => {
 }
 
 .v-theme--dark .ground {
-  --ground-strength: 0.45;
+  --ground-strength: 0.55;
   --ground-veil-top: 0.55;
   --ground-veil-bottom: 0.7;
 }
 
 .v-theme--light .ground {
-  --ground-strength: 0.38;
+  --ground-strength: 0.48;
   --ground-veil-top: 0.5;
   --ground-veil-bottom: 0.6;
 }
