@@ -1,0 +1,75 @@
+invalid_body:
+  value: "Nie udało się odczytać żądania."
+  description: "API error invalid_body"
+invalid_request:
+  value: "Wartość w żądaniu ma zły typ."
+  description: "API error invalid_request"
+invalid_url:
+  value: "To nie jest poprawny adres publicznego repozytorium GitHub."
+  description: "API error invalid_url"
+invalid_repository:
+  value: "Podaj repozytorium w formie owner/name."
+  description: "API error invalid_repository"
+invalid_design:
+  value: "Jednej z opcji wyglądu nie da się wyrenderować."
+  description: "API error invalid_design"
+token_required:
+  value: "Ta operacja wymaga tokenu automatyzacji."
+  description: "API error token_required"
+token_invalid:
+  value: "Token automatyzacji jest nieznany albo unieważniony."
+  description: "API error token_invalid"
+repo_private:
+  value: "To repozytorium jest prywatne. qr2g.it linkuje tylko publiczne repozytoria."
+  description: "API error repo_private"
+repo_not_found:
+  value: "GitHub nie pokazuje publicznie tego repozytorium."
+  description: "API error repo_not_found"
+turnstile_required:
+  value: "Sprawdzenie przeglądarki nie zwróciło tokenu."
+  description: "API error turnstile_required"
+turnstile_failed:
+  value: "Sprawdzenie przeglądarki nie zostało przyjęte. Spróbuj ponownie."
+  description: "API error turnstile_failed"
+turnstile_unavailable:
+  value: "Sprawdzenie przeglądarki nie zakończyło się. Spróbuj ponownie."
+  description: "Client and API error turnstile_unavailable"
+not_found:
+  value: "Nie ma takiego linku."
+  description: "API error not_found"
+link_not_found:
+  value: "To repozytorium nie ma jeszcze linku qr2g.it."
+  description: "API error link_not_found"
+not_listed:
+  value: "To repozytorium nie jest publicznie wymienione."
+  description: "API error not_listed"
+link_unavailable:
+  value: "Repozytorium nie jest już publicznie dostępne."
+  description: "API error link_unavailable"
+rate_limited:
+  value: "Zbyt wiele żądań. Odczekaj chwilę i spróbuj ponownie."
+  description: "API error rate_limited"
+quota_exceeded:
+  value: "Dzienny limit tokenu został wykorzystany."
+  description: "API error quota_exceeded"
+github_unavailable:
+  value: "GitHub jest chwilowo niedostępny."
+  description: "API error github_unavailable"
+github_rate_limited:
+  value: "Osiągnięto limit zapytań GitHuba. Spróbuj za chwilę."
+  description: "API error github_rate_limited"
+verification_failed:
+  value: "Nie udało się zweryfikować tożsamości repozytorium."
+  description: "API error verification_failed"
+contact_unavailable:
+  value: "Adres kontaktowy nie jest skonfigurowany."
+  description: "API error contact_unavailable"
+internal:
+  value: "Coś poszło nie tak po naszej stronie."
+  description: "API error internal"
+network:
+  value: "Sieć jest niedostępna."
+  description: "Client error when no response arrived"
+unknown:
+  value: "Nieoczekiwany błąd."
+  description: "Fallback for an unknown error"

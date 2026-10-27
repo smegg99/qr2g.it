@@ -1,0 +1,75 @@
+invalid_body:
+  value: "The request could not be read."
+  description: "API error invalid_body"
+invalid_request:
+  value: "A request value has the wrong type."
+  description: "API error invalid_request"
+invalid_url:
+  value: "That isn't a valid public GitHub repository URL."
+  description: "API error invalid_url"
+invalid_repository:
+  value: "Use owner/name for the repository."
+  description: "API error invalid_repository"
+invalid_design:
+  value: "One of the design options cannot be rendered."
+  description: "API error invalid_design"
+token_required:
+  value: "This operation needs an automation token."
+  description: "API error token_required"
+token_invalid:
+  value: "The automation token is unknown or revoked."
+  description: "API error token_invalid"
+repo_private:
+  value: "This repository is private. qr2g.it only links to public repositories."
+  description: "API error repo_private"
+repo_not_found:
+  value: "GitHub doesn't show that repository publicly."
+  description: "API error repo_not_found"
+turnstile_required:
+  value: "The browser check did not produce a token."
+  description: "API error turnstile_required"
+turnstile_failed:
+  value: "The browser check was not accepted. Try again."
+  description: "API error turnstile_failed"
+turnstile_unavailable:
+  value: "The browser check could not complete. Try again."
+  description: "Client and API error turnstile_unavailable"
+not_found:
+  value: "No such link."
+  description: "API error not_found"
+link_not_found:
+  value: "This repository has no qr2g.it link yet."
+  description: "API error link_not_found"
+not_listed:
+  value: "This repository is not listed publicly."
+  description: "API error not_listed"
+link_unavailable:
+  value: "Repository is no longer publicly available."
+  description: "API error link_unavailable"
+rate_limited:
+  value: "Too many requests. Wait a moment and try again."
+  description: "API error rate_limited"
+quota_exceeded:
+  value: "The token's daily quota is used up."
+  description: "API error quota_exceeded"
+github_unavailable:
+  value: "GitHub is temporarily unavailable."
+  description: "API error github_unavailable"
+github_rate_limited:
+  value: "GitHub rate limit reached. Try again shortly."
+  description: "API error github_rate_limited"
+verification_failed:
+  value: "Couldn't verify the repository identity."
+  description: "API error verification_failed"
+contact_unavailable:
+  value: "The contact address is not configured."
+  description: "API error contact_unavailable"
+internal:
+  value: "Something went wrong on our end."
+  description: "API error internal"
+network:
+  value: "Network unreachable."
+  description: "Client error when no response arrived"
+unknown:
+  value: "Unexpected error."
+  description: "Fallback for an unknown error"

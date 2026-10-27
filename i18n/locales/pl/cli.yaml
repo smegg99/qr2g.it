@@ -1,0 +1,98 @@
+root:
+  value: "Stałe krótkie linki i kody QR dla publicznych repozytoriów GitHub"
+  description: "Description of the qr2git command"
+serve:
+  value: "Uruchom stronę, API i przekierowania"
+  description: "Description of the serve command"
+token:
+  short:
+    value: "Wydawaj, wyświetlaj i unieważniaj tokeny automatyzacji"
+    description: "Description of the token command"
+  create:
+    value: "Wydaj token; jego sekret jest wypisywany tylko raz"
+    description: "Description of token create"
+  nameFlag:
+    value: "kto używa tokenu"
+    description: "Help of the --name flag"
+  quotaFlag:
+    value: "żądań na dzień UTC"
+    description: "Help of the --quota flag"
+  list:
+    value: "Wyświetl tokeny bez sekretów"
+    description: "Description of token list"
+  revoke:
+    value: "Unieważnij token na stałe"
+    description: "Description of token revoke"
+  missing:
+    value: "token {id} nie istnieje albo jest już unieważniony"
+    description: "Error when revoking an unknown token"
+    placeholders:
+      id: {type: string}
+  idNumber:
+    value: "ID musi być liczbą"
+    description: "Usage error for a non-numeric token ID"
+moderate:
+  short:
+    value: "Zapisuj decyzje o usunięciu po zgłoszeniu"
+    description: "Description of the moderate command"
+  unlist:
+    value: "Ukryj w przeglądaniu i statystykach; link dalej przekierowuje"
+    description: "Description of moderate unlist"
+  remove:
+    value: "Ukryj wszędzie i wyłącz przekierowanie; identyfikator nie wraca do puli"
+    description: "Description of moderate remove"
+  clear:
+    value: "Usuń zapisaną decyzję"
+    description: "Description of moderate clear"
+  list:
+    value: "Wyświetl zapisane decyzje"
+    description: "Description of moderate list"
+  noteFlag:
+    value: "powód, do zapisu operatora"
+    description: "Help of the --note flag"
+  notSlug:
+    value: "{value} nie jest identyfikatorem linku"
+    description: "Usage error for an invalid slug"
+    placeholders:
+      value: {type: string}
+  missing:
+    value: "link {slug} nie istnieje"
+    description: "Error for an unknown slug"
+    placeholders:
+      slug: {type: string}
+column:
+  id:
+    value: "ID"
+    description: "Table column"
+  name:
+    value: "Nazwa"
+    description: "Table column"
+  quota:
+    value: "Limit dzienny"
+    description: "Table column"
+  created:
+    value: "Utworzono"
+    description: "Table column"
+  lastUsed:
+    value: "Ostatnie użycie"
+    description: "Table column"
+  revoked:
+    value: "Unieważniono"
+    description: "Table column"
+  slug:
+    value: "Identyfikator"
+    description: "Table column"
+  repository:
+    value: "Repozytorium"
+    description: "Table column"
+  action:
+    value: "Działanie"
+    description: "Table column"
+  note:
+    value: "Notatka"
+    description: "Table column"
+defaultConfig:
+  value: "utworzono domyślną konfigurację w {path}; sprawdź ją i uruchom ponownie"
+  description: "Shown after a default config is written"
+  placeholders:
+    path: {type: string}

@@ -1,0 +1,98 @@
+root:
+  value: "Permanent short links and QR codes for public GitHub repositories"
+  description: "Description of the qr2git command"
+serve:
+  value: "Serve the website, API and redirects"
+  description: "Description of the serve command"
+token:
+  short:
+    value: "Issue, list and revoke automation tokens"
+    description: "Description of the token command"
+  create:
+    value: "Issue a token; its secret is printed once"
+    description: "Description of token create"
+  nameFlag:
+    value: "who uses the token"
+    description: "Help of the --name flag"
+  quotaFlag:
+    value: "requests per UTC day"
+    description: "Help of the --quota flag"
+  list:
+    value: "List tokens without their secrets"
+    description: "Description of token list"
+  revoke:
+    value: "Revoke a token permanently"
+    description: "Description of token revoke"
+  missing:
+    value: "token {id} does not exist or is already revoked"
+    description: "Error when revoking an unknown token"
+    placeholders:
+      id: {type: string}
+  idNumber:
+    value: "ID must be a number"
+    description: "Usage error for a non-numeric token ID"
+moderate:
+  short:
+    value: "Record removal decisions after a report"
+    description: "Description of the moderate command"
+  unlist:
+    value: "Hide from discovery and statistics; the link keeps redirecting"
+    description: "Description of moderate unlist"
+  remove:
+    value: "Hide everywhere and stop redirecting; the slug is never reused"
+    description: "Description of moderate remove"
+  clear:
+    value: "Remove a recorded decision"
+    description: "Description of moderate clear"
+  list:
+    value: "List recorded decisions"
+    description: "Description of moderate list"
+  noteFlag:
+    value: "why, for the operator record"
+    description: "Help of the --note flag"
+  notSlug:
+    value: "{value} is not a slug"
+    description: "Usage error for an invalid slug"
+    placeholders:
+      value: {type: string}
+  missing:
+    value: "link {slug} does not exist"
+    description: "Error for an unknown slug"
+    placeholders:
+      slug: {type: string}
+column:
+  id:
+    value: "ID"
+    description: "Table column"
+  name:
+    value: "Name"
+    description: "Table column"
+  quota:
+    value: "Daily quota"
+    description: "Table column"
+  created:
+    value: "Created"
+    description: "Table column"
+  lastUsed:
+    value: "Last used"
+    description: "Table column"
+  revoked:
+    value: "Revoked"
+    description: "Table column"
+  slug:
+    value: "Slug"
+    description: "Table column"
+  repository:
+    value: "Repository"
+    description: "Table column"
+  action:
+    value: "Action"
+    description: "Table column"
+  note:
+    value: "Note"
+    description: "Table column"
+defaultConfig:
+  value: "default config generated at {path}; review it and run again"
+  description: "Shown after a default config is written"
+  placeholders:
+    path: {type: string}
