@@ -5,20 +5,20 @@ close:
   value: Close
   description: Text shown in help / close
 intro:
-  value: qr2g.it gives a public GitHub repository a stable address. When the repository is renamed or transferred, its short link can follow the same GitHub identity.
+  value: Create a permanent short link and QR code for a public GitHub repository.
   description: Text shown in help / intro
 howItWorks:
   title:
     value: How it works
     description: Text shown in help / howItWorks / title
   step1:
-    value: Paste any public GitHub repository - owner/repo, github.com/owner/repo, or the full URL.
+    value: Paste owner/repo, github.com/owner/repo, or a full HTTPS GitHub URL.
     description: Text shown in help / howItWorks / step1
   step2:
-    value: We resolve it to GitHub's stable identity (the repo's GraphQL Node ID) and issue a short slug.
+    value: Generate a short link, then copy it or download its QR code.
     description: Text shown in help / howItWorks / step2
   step3:
-    value: If the repo is renamed or transferred later, the short link follows the new location automatically.
+    value: The link follows the repository when it is renamed or transferred.
     description: Text shown in help / howItWorks / step3
 qr:
   title:

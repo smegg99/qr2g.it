@@ -2,7 +2,7 @@ title:
   value: API curl
   description: Text shown in docs / title
 intro:
-  value: Użyj curl, aby uzyskać stały link do GitHuba, odczytać metadane lub sprawdzić cel przekierowania. Bez SDK i bez konta.
+  value: Twórz i sprawdzaj krótkie linki za pomocą curl.
   description: Text shown in docs / intro
 contents:
   value: Na tej stronie
@@ -60,7 +60,7 @@ create:
     value: Wyślij POST z pełnym adresem HTTPS repozytorium GitHub. Powyższe polecenie skrótowe jest najprostszą opcją w terminalu.
     description: Text shown in docs / create / text
   verification:
-    value: Publiczny endpoint POST wymaga świeżego tokenu Turnstile z weryfikacji w przeglądarce. Przypisz go do TURNSTILE_TOKEN. Token API konta Cloudflare go nie zastąpi. Tokenów weryfikacji nie można używać ponownie.
+    value: Żądania POST wymagają nowego tokenu Turnstile z weryfikacji w przeglądarce. Przypisz ten jednorazowy token do TURNSTILE_TOKEN.
     description: Text shown in docs / create / verification
   result:
     value: 'Odpowiedź jest w formacie JSON: 201 dla nowego linku lub 200 dla istniejącego. Nieznane, prywatne i nieprawidłowe repozytoria są odrzucane.'

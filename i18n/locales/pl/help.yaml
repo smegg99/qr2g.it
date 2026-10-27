@@ -5,20 +5,20 @@ close:
   value: Zamknij
   description: Text shown in help / close
 intro:
-  value: qr2g.it nadaje publicznemu repozytorium GitHub stały adres. Po zmianie nazwy lub właściciela krótki link może podążać za tą samą tożsamością repozytorium.
+  value: Utwórz stały krótki link i kod QR do publicznego repozytorium GitHub.
   description: Text shown in help / intro
 howItWorks:
   title:
     value: Jak to działa
     description: Text shown in help / howItWorks / title
   step1:
-    value: Wklej dowolne publiczne repozytorium GitHub — owner/repo, github.com/owner/repo albo pełny URL.
+    value: Wklej owner/repo, github.com/owner/repo lub pełny adres HTTPS repozytorium GitHub.
     description: Text shown in help / howItWorks / step1
   step2:
-    value: Ustalamy jego stabilną tożsamość w GitHubie, czyli GraphQL Node ID repozytorium, i tworzymy krótki slug.
+    value: Wygeneruj krótki link, a następnie skopiuj go lub pobierz kod QR.
     description: Text shown in help / howItWorks / step2
   step3:
-    value: Jeśli repozytorium zostanie później przemianowane albo przeniesione, krótki link automatycznie podąży za nową lokalizacją.
+    value: Link podąża za repozytorium po zmianie jego nazwy lub właściciela.
     description: Text shown in help / howItWorks / step3
 qr:
   title:

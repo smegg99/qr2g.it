@@ -95,7 +95,6 @@ onBeforeUnmount(() => clearTimeout(timer))
 </script>
 
 <style scoped>
-/* One address readout, with a separate repository footer. */
 .display {
   --display-pad: 24px;
   display: grid;

@@ -16,7 +16,7 @@ Permanent short links and QR codes for public GitHub repositories. A link is tie
 - Python 3 for the generated-file checks and PostgreSQL dump importer.
 - `just` for the command recipes. `sqlite3` is optional for `just db-shell`.
 
-The frontend uses S99AB's graphite theme and stylesheet with the same compact, flat controls as Goptivum-Desktop and SmeggTuner. Its pinned package archive and source provenance are under `web/vendor/`, so a VPS build does not require a sibling checkout or private GitHub credentials. pnpm remains this repository's package manager.
+S99AB generates the frontend theme from an accent seed saved in each browser. Its package archive is bundled under `web/vendor/` for deployment builds.
 
 ## Local development
 
@@ -40,7 +40,7 @@ just release
 
 `just check` runs Go formatting, vet, backend tests, frontend tests, lint, typecheck, locale drift and source-key checks, config generation checks, shared-package verification, deployment checks, and the complete build. `just test-race` runs backend tests with the race detector.
 
-`VERSION` owns the application release version. `just build` builds the frontend from the committed locale bundles, embeds it, and produces `bin/qr2git`. `just release` packages that binary, configuration examples, environment example, version, README, and license into `qr2git-v<VERSION>-linux-amd64.tar.gz` without deleting an earlier release tree.
+`VERSION` sets the release version. `just build` builds the frontend from the committed locale bundles, embeds it, and produces `bin/qr2git`. `just release` packages that binary, configuration examples, environment example, version, README, and license into `qr2git-v<VERSION>-linux-amd64.tar.gz`.
 
 English and Polish copy is authored in `i18n/locales/`. S99Locale generates the committed bundles under `web/i18n/generated/`. Change YAML, run `just locales`, and check with `just check-locales`. The private S99Locale module is a development dependency: a cold tool cache needs authenticated access to its Git repository. Production builds consume the committed generated bundles and do not run or download that compiler. Do not edit generated bundles or config types directly.
 
@@ -83,7 +83,7 @@ Both return JSON without re-verifying in GitHub. Fields include `url`, `slug`, `
 curl --fail-with-body -sS https://qr2g.it/api/v1/links/2/resolve
 ```
 
-The resolve endpoint re-verifies stale active repositories before returning their destination. Unavailable verification fails closed instead of treating an old destination as trustworthy. Non-active links return HTTP 410. To inspect the normal redirect without following it:
+The resolve endpoint re-verifies stale active repositories before returning their destination. If verification fails, the endpoint returns an error. Non-active links return HTTP 410. To inspect the normal redirect without following it:
 
 ```sh
 curl -sS -D - -o /dev/null https://qr2g.it/2
@@ -93,7 +93,7 @@ Add `-L` when curl should follow redirects.
 
 ### Submit JSON
 
-The shorthand command is the simplest terminal interface. The public JSON endpoint requires a fresh Turnstile token obtained by completing a browser challenge. Set `TURNSTILE_TOKEN` to that token; an account API token is not a replacement, and verification tokens are single-use.
+POST requests require a fresh Turnstile token from a browser challenge. Set `TURNSTILE_TOKEN` to that single-use token.
 
 ```sh
 curl --fail-with-body -sS https://qr2g.it/api/v1/links \
@@ -129,7 +129,7 @@ Errors contain a stable `error` code and a `message`. `--fail-with-body` require
 
 ## VPS deployment
 
-Install the current S99Deploy CLI as `/usr/local/bin/depl` on the target host. Once this repository's changes are published:
+Install the current S99Deploy CLI as `/usr/local/bin/depl` on the target host. To install the service:
 
 ```sh
 sudo depl install https://github.com/smegg99/qr2g.it.git

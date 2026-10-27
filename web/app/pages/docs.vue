@@ -59,12 +59,7 @@
         >
           <h2>{{ t('docs.create.title') }}</h2>
           <p>{{ t('docs.create.text') }}</p>
-          <v-alert
-            icon="mdi-shield-check-outline"
-            class="my-4"
-          >
-            {{ t('docs.create.verification') }}
-          </v-alert>
+          <p>{{ t('docs.create.verification') }}</p>
           <CodeExample :code="CURL.create" />
           <p>{{ t('docs.create.result') }}</p>
         </section>

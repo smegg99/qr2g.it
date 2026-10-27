@@ -2,7 +2,7 @@ title:
   value: curl API
   description: Text shown in docs / title
 intro:
-  value: Use curl to get a permanent GitHub link, inspect its metadata, or check where it leads. No SDK or account required.
+  value: Create and inspect short links with curl.
   description: Text shown in docs / intro
 contents:
   value: On this page
@@ -60,7 +60,7 @@ create:
     value: POST a complete HTTPS GitHub repository URL. The shorthand command above is the simplest option for terminal use.
     description: Text shown in docs / create / text
   verification:
-    value: The public POST endpoint requires a fresh Turnstile token from a browser challenge. Set TURNSTILE_TOKEN to that token. A Cloudflare account API token is not a substitute, and verification tokens cannot be reused.
+    value: POST requests require a fresh Turnstile token from a browser challenge. Set TURNSTILE_TOKEN to that single-use token.
     description: Text shown in docs / create / verification
   result:
     value: 'The response is JSON: 201 for a newly created link or 200 for an existing one. Unknown, private, or invalid repositories are rejected.'
