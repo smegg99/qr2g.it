@@ -1,0 +1,73 @@
+title:
+  value: "Twój krótki link"
+  description: "Title of the result pane"
+shortLink:
+  value: "Krótki link"
+  description: "Label above the short address"
+copy:
+  value: "Kopiuj"
+  description: "Copy button"
+copied:
+  value: "Skopiowano"
+  description: "Copy button after copying"
+openRepo:
+  value: "Otwórz repozytorium"
+  description: "Accessible name of the repository link"
+repository:
+  value: "Repozytorium"
+  description: "Label before the repository link on the result card"
+stepsLabel:
+  value: "Kroki"
+  description: "Accessible name of the result stepper"
+refresh:
+  value: "Odśwież kliknięcia"
+  description: "Button that reloads the link and its click statistics"
+steps:
+  link:
+    value: "Krótki link"
+    description: "First result step: the link and its clicks"
+  qr:
+    value: "Kod QR"
+    description: "Second result step: the QR code generator"
+toQr:
+  value: "Utwórz kod QR"
+  description: "Button from the link step to the QR step"
+clicks:
+  value: "Kliknięcia"
+  description: "Label of the all-time filtered redirect count on the result card"
+month:
+  value: "30 dni"
+  description: "Label of the 30-day count on the result card"
+week:
+  value: "7 dni"
+  description: "Label of the 7-day count on the result card"
+last:
+  value: "Ostatnie kliknięcie"
+  description: "Label of the latest redirect time on the result card"
+stars:
+  value: "Gwiazdki"
+  description: "Label of the GitHub star count on the result card"
+never:
+  value: "Jeszcze brak"
+  description: "Shown when the link has no counted redirect"
+chartLabel:
+  value: "Dzienne kliknięcia w ostatnich 30 dniach"
+  description: "Accessible name of the result chart"
+pending:
+  value: "Kliknięcia pojawią się po pierwszym sprawdzeniu ustawień właściciela."
+  description: "Result card before the first policy check"
+hidden:
+  value: "Właściciel ukrył to repozytorium, więc jego kliknięcia nie są pokazywane."
+  description: "Result card when the owner set noindex"
+paused:
+  value: "Właściciel wyłączył statystyki; wcześniejsze kliknięcia są nadal widoczne."
+  description: "Result card when the owner set noanalytics"
+unavailable:
+  value: "Kliknięcia nie są pokazywane, gdy link jest niedostępny."
+  description: "Result card for an unavailable or removed link"
+openShort:
+  value: "Otwórz krótki link"
+  description: "Open button"
+close:
+  value: "Wróć do pola repozytorium"
+  description: "Close button of the result pane"

@@ -1,0 +1,73 @@
+title:
+  value: "Your short link"
+  description: "Title of the result pane"
+shortLink:
+  value: "Short link"
+  description: "Label above the short address"
+copy:
+  value: "Copy"
+  description: "Copy button"
+copied:
+  value: "Copied"
+  description: "Copy button after copying"
+openRepo:
+  value: "Open repository"
+  description: "Accessible name of the repository link"
+repository:
+  value: "Repository"
+  description: "Label before the repository link on the result card"
+stepsLabel:
+  value: "Steps"
+  description: "Accessible name of the result stepper"
+refresh:
+  value: "Refresh clicks"
+  description: "Button that reloads the link and its click statistics"
+steps:
+  link:
+    value: "Short link"
+    description: "First result step: the link and its clicks"
+  qr:
+    value: "QR code"
+    description: "Second result step: the QR code generator"
+toQr:
+  value: "Make the QR code"
+  description: "Button from the link step to the QR step"
+clicks:
+  value: "Clicks"
+  description: "Label of the all-time filtered redirect count on the result card"
+month:
+  value: "30 days"
+  description: "Label of the 30-day count on the result card"
+week:
+  value: "7 days"
+  description: "Label of the 7-day count on the result card"
+last:
+  value: "Last click"
+  description: "Label of the latest redirect time on the result card"
+stars:
+  value: "Stars"
+  description: "Label of the GitHub star count on the result card"
+never:
+  value: "None yet"
+  description: "Shown when the link has no counted redirect"
+chartLabel:
+  value: "Daily clicks in the last 30 days"
+  description: "Accessible name of the result chart"
+pending:
+  value: "Clicks appear after the first check of the owner settings."
+  description: "Result card before the first policy check"
+hidden:
+  value: "The owner hid this repository, so its clicks are not shown."
+  description: "Result card when the owner set noindex"
+paused:
+  value: "The owner turned statistics off; earlier clicks are still shown."
+  description: "Result card when the owner set noanalytics"
+unavailable:
+  value: "Clicks are not shown while the link is unavailable."
+  description: "Result card for an unavailable or removed link"
+openShort:
+  value: "Open short link"
+  description: "Open button"
+close:
+  value: "Back to the repository input"
+  description: "Close button of the result pane"

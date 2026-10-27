@@ -13,7 +13,7 @@
       :aria-pressed="choice ? item.value === model : undefined"
       :aria-label="item.aria"
       :title="item.title"
-      :disabled="disabled"
+      :disabled="disabled || item.disabled"
       @click="pick(item.value)"
     >
       {{ item.label }}
@@ -27,6 +27,7 @@ export interface KeyItem {
   label: string
   title?: string
   aria?: string
+  disabled?: boolean
 }
 
 const props = defineProps<{

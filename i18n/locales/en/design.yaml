@@ -1,0 +1,91 @@
+title:
+  value: "QR code"
+  description: "Heading of the QR editor"
+preview:
+  value: "Preview"
+  description: "Caption under the QR preview"
+previewAlt:
+  value: "Preview for {name}"
+  description: "Alternative text of the preview image"
+  placeholders:
+    name: {type: string}
+fields:
+  foreground:
+    value: "QR colour"
+    description: "Design field"
+  background:
+    value: "QR tile"
+    description: "Design field"
+  errorCorrection:
+    value: "Error correction"
+    description: "Design field"
+  margin:
+    value: "Quiet zone"
+    description: "Design field"
+  radius:
+    value: "Corner radius"
+    description: "Design field"
+  size:
+    value: "Width"
+    description: "Design field"
+  transparent:
+    value: "Transparent background"
+    description: "Design field"
+  logo:
+    value: "HyperFox"
+    description: "Design field: the qr2g.it fox logo in the centre of the code"
+  format:
+    value: "Format"
+    description: "Design field"
+  url:
+    value: "Link"
+    description: "Design field"
+  address:
+    value: "Address"
+    description: "Design field"
+invalid:
+  invalid:
+    value: "{field}: invalid value."
+    description: "Renderer field error"
+    placeholders:
+      field: {type: string}
+  out_of_range:
+    value: "{field}: out of range."
+    description: "Renderer field error"
+    placeholders:
+      field: {type: string}
+  low_contrast:
+    value: "{field}: not enough contrast between the QR colour and the tile for reliable scanning."
+    description: "Renderer field error"
+    placeholders:
+      field: {type: string}
+  unsupported:
+    value: "{field}: not supported with these options."
+    description: "Renderer field error"
+    placeholders:
+      field: {type: string}
+modules:
+  value: "modules"
+  description: "Unit suffix of the quiet zone field"
+swap:
+  value: "Swap colours"
+  description: "Button that swaps the QR colour and the tile colour"
+opaque:
+  value: "Opaque"
+  description: "Background option"
+transparent:
+  value: "Transparent"
+  description: "Background option"
+ecHelper:
+  L:
+    value: "~7% recovery"
+    description: "Error correction level"
+  M:
+    value: "~15% recovery"
+    description: "Error correction level"
+  Q:
+    value: "~25% recovery"
+    description: "Error correction level"
+  H:
+    value: "~30% recovery"
+    description: "Error correction level"

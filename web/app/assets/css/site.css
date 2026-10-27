@@ -12,6 +12,12 @@
   --font-mono: ui-monospace, 'JetBrains Mono', 'Cascadia Code', 'SF Mono', menlo, consolas, monospace;
 }
 html { scroll-behavior: smooth; }
+/* Native scrollbars never take width from the layout; ScrollRail draws the page position over it.
+   Wide code keeps a thin bar, which is part of its fixed height rather than appearing later. */
+* { scrollbar-width: none; }
+*::-webkit-scrollbar { display: none; }
+.code-example pre, .response, .status-table-wrap { scrollbar-width: thin; }
+.code-example pre::-webkit-scrollbar, .response::-webkit-scrollbar, .status-table-wrap::-webkit-scrollbar { display: block; height: 6px; }
 body { margin: 0; }
 .v-application { font-family: var(--s99ab-font-sans); background: rgb(var(--v-theme-background)); }
 .v-application__wrap { background: transparent; }
@@ -41,7 +47,7 @@ body { margin: 0; }
   --control-h: 30px;
 }
 .pane > .pane-head:first-child { border-top: 0; }
-.pane-head .pane-title { margin: 0; font-size: 15px; font-weight: 650; line-height: 1.3; color: rgb(var(--v-theme-ink)); }
+.pane-head .pane-title { margin: 0; white-space: nowrap; font-size: 15px; font-weight: 650; line-height: 1.3; color: rgb(var(--v-theme-ink)); }
 .pane-meta { flex: 1 1 auto; text-align: right; font-size: 12px; color: rgb(var(--v-theme-ink3)); font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .pane-actions { display: flex; align-items: center; gap: 6px; flex: 0 0 auto; }
 .pane-body { padding: var(--pane-pad); }
@@ -94,13 +100,14 @@ body { margin: 0; }
 .site-header > * { pointer-events: auto; }
 .header-brand { margin-right: auto; display: flex; padding: 6px; border-radius: 6px; }
 .header-brand img { display: block; width: 100px; height: auto; }
-.header-keys { display: flex; align-items: center; gap: 2px; padding: 4px; border-radius: 999px; }
-.header-keys .v-btn { height: 34px; width: 34px; min-width: 34px; padding: 0; border-radius: 999px; color: rgb(var(--v-theme-ink2)); }
+.header-keys { display: flex; align-items: center; gap: 4px; padding: 6px; border-radius: var(--pane-radius); }
+.header-keys .v-btn { height: 40px; width: 40px; min-width: 40px; padding: 0; border-radius: var(--s99ab-radius); color: rgb(var(--v-theme-ink2)); }
+.header-keys .v-btn .v-icon { font-size: 22px; }
 .header-keys .v-btn:hover { color: rgb(var(--v-theme-ink)); }
-.header-links { display: flex; align-items: center; gap: 2px; }
-.header-sep { width: 1px; height: 18px; margin-inline: 4px; background: rgb(var(--v-theme-line)); }
+.header-links { display: flex; align-items: center; gap: 4px; }
+.header-sep { width: 1px; height: 22px; margin-inline: 6px; background: rgb(var(--v-theme-line)); }
 .header-keys .v-btn--active { color: rgb(var(--v-theme-accent)); }
-.header-keys .header-lang { font-size: 12px; font-weight: 700; letter-spacing: 0; }
+.header-keys .header-lang { padding-top: 2px; font-size: 13px; font-weight: 700; letter-spacing: 0; }
 .v-theme--light .header-brand img,
 .v-theme--light .home-logo { filter: invert(1); }
 
@@ -110,11 +117,12 @@ body { margin: 0; }
 .home-start { max-width: 720px; margin-inline: auto; text-align: center; }
 .home-brand { display: flex; justify-content: center; margin: 0; }
 .home-logo { display: block; width: 320px; max-width: 72vw; height: auto; }
-.home-lead { margin: 18px auto 32px; max-width: 34em; font-size: 17px; line-height: 1.5; font-weight: 500; color: rgb(var(--v-theme-ink)); text-wrap: balance; }
-.home-error { margin-top: 16px; text-align: left; }
-.home-error:empty { display: none; }
-.home-error .v-alert { background: rgb(var(--v-theme-chrome)); }
-#qr2g-turnstile-host:not(:empty) { margin-top: 20px; }
+/* One line at every width: the size follows the viewport instead of wrapping. */
+.home-lead { margin: 18px auto 32px; font-size: clamp(12px, 3.6vw, 17px); line-height: 1.5; font-weight: 500; color: rgb(var(--v-theme-ink)); white-space: nowrap; }
+.home-error { text-align: left; --notice-radius: 12px; }
+/* Cloudflare draws the widget only when it needs a click; it then spans the input's width. */
+#qr2g-turnstile-host:not(:empty) { margin-top: 16px; }
+.home-note { margin: 0; font-size: 12px; line-height: 1.5; color: rgb(var(--v-theme-ink3)); text-align: center; }
 
 .repo-bar {
   display: flex;
@@ -126,7 +134,17 @@ body { margin: 0; }
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 .repo-bar:focus-within { border-color: rgb(var(--v-theme-accent)); box-shadow: 0 0 0 3px color-mix(in srgb, rgb(var(--v-theme-accent)) 28%, transparent); }
-.repo-bar--error, .repo-bar--error:focus-within { border-color: rgb(var(--v-theme-error)); }
+/* The input itself shows the error (the message is a toast): a red edge and one short shake. */
+.repo-bar--error, .repo-bar--error:focus-within {
+  border-color: rgb(var(--v-theme-error));
+  box-shadow: 0 0 0 3px color-mix(in srgb, rgb(var(--v-theme-error)) 22%, transparent);
+  animation: repo-shake 0.38s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+.repo-bar--error .repo-bar__icon { color: rgb(var(--v-theme-error)); }
+@keyframes repo-shake {
+  20%, 60% { transform: translateX(-5px); }
+  40%, 80% { transform: translateX(5px); }
+}
 .repo-bar__icon { color: rgb(var(--v-theme-ink2)); flex: 0 0 auto; }
 .repo-bar__input {
   flex: 1 1 auto;
@@ -146,19 +164,31 @@ body { margin: 0; }
 .repo-bar .repo-bar__go { height: 46px; padding-inline: 18px; border-radius: 8px; font-weight: 700; font-size: 14px; letter-spacing: 0; text-transform: none; }
 .repo-bar__go-icon { display: none; }
 
-/* Form and result trade places with one short cross-fade. */
-.swap-enter-active, .swap-leave-active { transition: opacity 0.22s ease, transform 0.22s ease; }
-.swap-enter-from { opacity: 0; transform: translateY(10px); }
-.swap-leave-to { opacity: 0; transform: translateY(-6px); }
+/* A repository's colours cross-fade in and out (useLanguageTheme). S99AB switches the root animations off
+   for its own theme effects, so this fade is explicit: the old backdrop fades away over the new one. The page
+   content is its own layer that shows only the live page, so the old content never ghosts over the new. */
+html.accent-fade .page-body { view-transition-name: page; }
+html.accent-fade::view-transition-old(root) { z-index: 1; animation-name: accent-out; animation-duration: 0.9s; animation-timing-function: ease-in-out; }
+html.accent-fade::view-transition-new(root) { z-index: 0; animation-name: none; }
+html.accent-fade::view-transition-group(page) { z-index: 2; animation-name: none; }
+html.accent-fade::view-transition-old(page) { display: none; }
+html.accent-fade::view-transition-new(page) { animation-name: none; }
+@keyframes accent-out { from { opacity: 1; } to { opacity: 0; } }
+
+/* Form and result trade places: the form eases out quickly, the result settles in slowly. */
+.swap-leave-active { transition: opacity 0.2s ease-in, transform 0.2s ease-in; }
+.swap-enter-active { transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1); }
+.swap-enter-from { opacity: 0; transform: translateY(20px) scale(0.985); }
+.swap-leave-to { opacity: 0; transform: translateY(-8px) scale(0.995); }
 
 /* ---- result ------------------------------------------------------------------ */
 
-.result-pane { max-width: 940px; margin-inline: auto; }
-.home-page:has(.result-pane) { padding-top: 84px; }
+.result-pane { width: 100%; max-width: 1000px; margin-inline: auto; }
+/* The result sits in the middle of the screen, below the key bar. */
+.home-page:has(.result-pane) { display: flex; flex-direction: column; justify-content: center; min-height: 100dvh; padding-top: 80px; padding-bottom: clamp(24px, calc(100dvh - 700px), 80px); }
 .control__label { font-size: 12px; font-weight: 600; color: rgb(var(--v-theme-ink3)); }
 
 
-.qr-body { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 28px; align-items: start; }
 .preview { margin: 0; display: flex; flex-direction: column; gap: 8px; }
 .preview__well {
   padding: 14px;
@@ -170,9 +200,8 @@ body { margin: 0; }
 }
 .preview__caption { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; color: rgb(var(--v-theme-ink3)); font-variant-numeric: tabular-nums; }
 
-.controls { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 16px; }
+.controls { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 14px; }
 .controls__wide { grid-column: 1 / -1; }
-.controls > :last-child:nth-child(even) { grid-column: 1 / -1; }
 .control { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .control__label { display: flex; justify-content: space-between; gap: 8px; }
 .control__hint { font-weight: 400; }
@@ -191,7 +220,8 @@ body { margin: 0; }
 
 /* ---- docs --------------------------------------------------------------------- */
 
-.docs-page { max-width: 940px; padding-top: 84px; padding-bottom: 48px; }
+.docs-page, .sub-page { max-width: 940px; padding-top: 84px; padding-bottom: 48px; }
+.sub-page--narrow { max-width: 640px; }
 .docs-body { padding: 36px clamp(20px, 5vw, 48px) 44px; }
 .docs-heading h1 { margin: 0; font-size: clamp(30px, 4vw, 40px); font-weight: 750; letter-spacing: -0.025em; line-height: 1.1; }
 .docs-lead { margin: 12px 0 0; max-width: 40em; color: rgb(var(--v-theme-ink2)); font-size: 16px; line-height: 1.6; }
@@ -225,26 +255,32 @@ body { margin: 0; }
 
 /* ---- shared ------------------------------------------------------------------- */
 
+/* Inline text links inside panes read as part of the text, not as browser blue. */
+.pane-body p a:not(.v-btn), .home-note a { color: rgb(var(--v-theme-ink2)); text-decoration: underline; text-underline-offset: 2px; }
+.pane-body p a:not(.v-btn):hover, .home-note a:hover { color: rgb(var(--v-theme-accent)); }
+
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 .skip-link { position: fixed; top: 8px; left: 8px; z-index: 200; padding: 12px; background: rgb(var(--v-theme-chrome)); color: rgb(var(--v-theme-ink)); transform: translateY(-150%); }
 .skip-link:focus { transform: translateY(0); }
 a:focus-visible, button:focus-visible { outline: 2px solid rgb(var(--v-theme-accent)); outline-offset: 2px; }
 
-@media (max-width: 760px) {
-  .qr-body { grid-template-columns: minmax(0, 1fr); }
-  .preview { max-width: 360px; width: 100%; margin-inline: auto; }
-}
 @media (max-width: 600px) {
   :root { --pane-pad: 16px; }
   .site-width { padding-inline: 12px; }
   .site-header { inset: 10px 10px auto; }
+  /* On a phone the key bar fills the width, so the small logo link is hidden. */
+  .header-brand { display: none; }
+  .header-keys { gap: 2px; padding: 4px; }
+  .header-keys .v-btn { height: 36px; width: 36px; min-width: 36px; }
+  .header-keys .v-btn .v-icon { font-size: 20px; }
+  .header-sep { margin-inline: 3px; }
   .home-logo { width: 240px; }
-  .home-lead { font-size: 15px; margin-bottom: 24px; }
+  .home-lead { margin-bottom: 24px; }
   .repo-bar { height: 54px; padding-left: 14px; }
   .repo-bar .repo-bar__go { width: 42px; min-width: 42px; height: 42px; padding: 0; }
   .repo-bar__go-text { display: none; }
   .repo-bar__go-icon { display: inline-flex; }
-  .home-page:has(.result-pane), .docs-page { padding-top: 70px; }
+  .home-page:has(.result-pane), .docs-page, .sub-page { padding-top: 70px; }
   .controls { grid-template-columns: minmax(0, 1fr); }
   .pane-head .key { min-width: 40px; padding-inline: 8px; }
 }

@@ -10,6 +10,7 @@ export default withNuxt(
       'coverage/**',
       'node_modules/**',
       'i18n/generated/**',
+      'app/generated/**',
       'vendor/**',
     ],
   },

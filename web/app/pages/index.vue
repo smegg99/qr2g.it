@@ -1,81 +1,72 @@
 <!-- app/pages/index.vue -->
 <template>
   <div class="home-page site-width">
+    <!-- The open repository's stack colours behind the page; outside the content so it fades with the backdrop. -->
+    <Teleport to="#main">
+      <Transition name="glow">
+        <div
+          v-if="glow.length"
+          class="glow"
+          :style="glowStyle"
+          aria-hidden="true"
+        />
+      </Transition>
+    </Teleport>
     <Transition
       name="swap"
       mode="out-in"
     >
-      <div
-        v-if="!link"
+      <GeneratorStart
+        v-if="!flow.link.value"
         key="start"
-        class="home-start"
-      >
-        <h1 class="home-brand">
-          <img
-            src="/qr2g.it.svg"
-            :alt="t('app.name')"
-            class="home-logo"
-            width="320"
-            height="105"
-          >
-        </h1>
-        <p class="home-lead">
-          {{ t('app.tagline') }}
-        </p>
-        <RepoInputForm
-          v-model="rawUrl"
-          autofocus
-          :loading="loading"
-          :disabled="loading"
-          :show-invalid="invalidShown"
-          @submit="onSubmit"
-          @input-clear="clearError"
-        />
-        <div
-          id="qr2g-turnstile-host"
-          class="d-flex justify-center"
-        />
-        <div
-          class="home-error"
-          role="status"
-          aria-live="polite"
-        >
-          <ErrorMessage
-            v-if="error?.code"
-            :code="error.code"
-            @dismiss="clearError"
-          />
-        </div>
-      </div>
-      <HomeResolved
+        v-model="flow.rawUrl.value"
+        :stage="flow.stage.value"
+        :error="flow.error.value"
+        :problems="flow.problems.value"
+        @submit="flow.submit"
+        @dismiss="flow.clearError"
+      />
+      <GeneratorResult
         v-else
         key="result"
-        :link="link"
-        class="result-pane"
-        @close="onClose"
+        :link="flow.link.value"
+        :outcome="flow.outcome.value"
+        @close="flow.close"
+        @refresh="flow.refresh"
       />
     </Transition>
+    <p
+      class="sr-only"
+      role="status"
+      aria-live="polite"
+    >
+      {{ flow.announcement.value ? t(flow.announcement.value) : '' }}
+    </p>
   </div>
 </template>
 
 <script setup lang="ts">
-import RepoInputForm from '~/components/home/RepoInputForm.vue'
-import ErrorMessage from '~/components/home/ErrorMessage.vue'
-import HomeResolved from '~/components/home/HomeResolved.vue'
+import GeneratorResult from '~/components/generator/GeneratorResult.vue'
+import GeneratorStart from '~/components/generator/GeneratorStart.vue'
+import { useGeneratorFlow } from '~/composables/useGeneratorFlow'
+import { useLanguageTheme } from '~/composables/useLanguageTheme'
 
 const { t } = useI18n()
-const { link, loading, error, create, reset, clearError } = useShortLink()
-const rawUrl = ref('')
-const invalidShown = computed(() => error.value?.code === 'invalid_url')
-
-async function onSubmit(value: string) {
-  if (loading.value) return
-  rawUrl.value = value
-  await create({ url: value })
-}
-function onClose() {
-  reset()
-  rawUrl.value = ''
-}
+const flow = useGeneratorFlow()
+const { glow } = useLanguageTheme(() => {
+  const link = flow.link.value
+  if (!link) return []
+  return link.languages?.map(l => l.name) ?? (link.language ? [link.language] : [])
+})
+const SPOTS = ['12% 18%', '88% 26%', '50% 96%']
+const glowStyle = computed(() => ({
+  background: glow.value.map((color, i) => `radial-gradient(circle at ${SPOTS[i]}, ${color} 0, transparent 42%)`).join(', '),
+}))
 useSeoMeta({ title: () => t('home.metaTitle'), description: () => t('app.tagline') })
 </script>
+
+<style scoped>
+.glow { position: fixed; inset: 0; z-index: -1; opacity: 0.22; pointer-events: none; }
+.glow-enter-active, .glow-leave-active { transition: opacity 0.9s ease-in-out; }
+.glow-enter-from, .glow-leave-to { opacity: 0; }
+</style>

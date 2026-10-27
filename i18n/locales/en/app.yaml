@@ -2,5 +2,5 @@ name:
   value: qr2g.it
   description: Text shown in app / name
 tagline:
-  value: Permanent, QR-friendly short links for public GitHub repositories.
-  description: Text shown in app / tagline
+  value: Permanent QR short links for GitHub repositories.
+  description: One-line tagline under the home page logo; keep it short enough for a phone

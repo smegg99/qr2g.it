@@ -1,4 +1,4 @@
-<!-- app/components/home/NumberField.vue -->
+<!-- app/components/generator/NumberField.vue -->
 <template>
   <v-number-input
     :id="id"

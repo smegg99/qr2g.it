@@ -1,0 +1,91 @@
+title:
+  value: "Kod QR"
+  description: "Heading of the QR editor"
+preview:
+  value: "Podgląd"
+  description: "Caption under the QR preview"
+previewAlt:
+  value: "Podgląd dla {name}"
+  description: "Alternative text of the preview image"
+  placeholders:
+    name: {type: string}
+fields:
+  foreground:
+    value: "Kolor kodu"
+    description: "Design field"
+  background:
+    value: "Tło kodu"
+    description: "Design field"
+  errorCorrection:
+    value: "Korekcja błędów"
+    description: "Design field"
+  margin:
+    value: "Margines"
+    description: "Design field"
+  radius:
+    value: "Zaokrąglenie"
+    description: "Design field"
+  size:
+    value: "Szerokość"
+    description: "Design field"
+  transparent:
+    value: "Przezroczyste tło"
+    description: "Design field"
+  logo:
+    value: "HyperFox"
+    description: "Design field: the qr2g.it fox logo in the centre of the code"
+  format:
+    value: "Format"
+    description: "Design field"
+  url:
+    value: "Link"
+    description: "Design field"
+  address:
+    value: "Adres"
+    description: "Design field"
+invalid:
+  invalid:
+    value: "{field}: niepoprawna wartość."
+    description: "Renderer field error"
+    placeholders:
+      field: {type: string}
+  out_of_range:
+    value: "{field}: poza zakresem."
+    description: "Renderer field error"
+    placeholders:
+      field: {type: string}
+  low_contrast:
+    value: "{field}: za mały kontrast między kolorem kodu a tłem do pewnego skanowania."
+    description: "Renderer field error"
+    placeholders:
+      field: {type: string}
+  unsupported:
+    value: "{field}: nieobsługiwane przy tych opcjach."
+    description: "Renderer field error"
+    placeholders:
+      field: {type: string}
+modules:
+  value: "moduły"
+  description: "Unit suffix of the quiet zone field"
+swap:
+  value: "Zamień kolory"
+  description: "Button that swaps the QR colour and the tile colour"
+opaque:
+  value: "Kryjące"
+  description: "Background option"
+transparent:
+  value: "Przezroczyste"
+  description: "Background option"
+ecHelper:
+  L:
+    value: "~7% odzysku"
+    description: "Error correction level"
+  M:
+    value: "~15% odzysku"
+    description: "Error correction level"
+  Q:
+    value: "~25% odzysku"
+    description: "Error correction level"
+  H:
+    value: "~30% odzysku"
+    description: "Error correction level"

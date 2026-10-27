@@ -1,0 +1,17 @@
+label:
+  value: "Pobierz"
+  description: "Label above the download buttons of the QR step"
+download:
+  value: "Pobierz {format}"
+  description: "Download button"
+  placeholders:
+    format: {type: string}
+copyDesign:
+  value: "Kopiuj link z wyglądem"
+  description: "Copy button"
+copiedDesign:
+  value: "Skopiowano link z wyglądem"
+  description: "Copy confirmation"
+designLinkNote:
+  value: "Link z wyglądem otwiera qr2g.it z tym repozytorium i wyglądem. Nie tworzy ani nie potwierdza krótkiego linku."
+  description: "Explains design links"

@@ -1,4 +1,4 @@
-<!-- app/components/home/ColorField.vue -->
+<!-- app/components/generator/ColorField.vue -->
 <template>
   <v-text-field
     :id="id"

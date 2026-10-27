@@ -1,4 +1,4 @@
-<!-- app/components/home/RepoInputForm.vue -->
+<!-- app/components/generator/RepoInputForm.vue -->
 <template>
   <v-form
     :class="['repo-bar', { 'repo-bar--error': showInvalid }]"

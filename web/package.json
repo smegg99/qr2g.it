@@ -11,12 +11,14 @@
     "test": "node --experimental-strip-types --test tests/*.test.mjs",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "typecheck": "nuxt typecheck"
+    "typecheck": "nuxt typecheck",
+    "generate:api": "openapi-ts"
   },
   "dependencies": {
     "@fontsource-variable/overpass": "^5.2.8",
     "@material/material-color-utilities": "0.4.0",
     "@mdi/font": "^7.4.47",
+    "@number-flow/vue": "0.5.2",
     "@nuxtjs/i18n": "^10.2.3",
     "@pinia/colada": "1.4.4",
     "@pinia/nuxt": "1.0.2",
@@ -28,6 +30,7 @@
     "vue-router": "5.3.1"
   },
   "devDependencies": {
+    "@hey-api/openapi-ts": "0.99.0",
     "@nuxt/eslint": "1.17.0",
     "@types/node": "22.20.2",
     "@types/qrcode": "^1.5.5",

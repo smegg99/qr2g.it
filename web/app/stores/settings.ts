@@ -4,7 +4,17 @@ import {
   DEFAULT_THEME_MODE,
   type ThemeMode,
 } from '~/types/config'
-import { DEFAULT_LOCALE, type LocaleCode } from '~/types/locale'
+import { DEFAULT_LOCALE, LOCALE_CODES, type LocaleCode } from '~/types/locale'
+
+/** The first supported browser language; a saved choice replaces it when the store hydrates. */
+function browserLocale(): LocaleCode {
+  if (typeof navigator === 'undefined') return DEFAULT_LOCALE
+  for (const tag of navigator.languages ?? [navigator.language]) {
+    const code = tag.toLowerCase().split('-')[0] as LocaleCode
+    if (LOCALE_CODES.includes(code)) return code
+  }
+  return DEFAULT_LOCALE
+}
 
 interface SettingsState {
   themeMode: ThemeMode
@@ -14,7 +24,7 @@ interface SettingsState {
 export const useSettingsStore = defineStore('settings', {
   state: (): SettingsState => ({
     themeMode: DEFAULT_THEME_MODE,
-    language: DEFAULT_LOCALE,
+    language: browserLocale(),
   }),
   actions: {
     setThemeMode(mode: ThemeMode) {

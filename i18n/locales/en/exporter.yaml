@@ -1,0 +1,17 @@
+label:
+  value: "Download"
+  description: "Label above the download buttons of the QR step"
+download:
+  value: "Download {format}"
+  description: "Download button"
+  placeholders:
+    format: {type: string}
+copyDesign:
+  value: "Copy design link"
+  description: "Copy button"
+copiedDesign:
+  value: "Design link copied"
+  description: "Copy confirmation"
+designLinkNote:
+  value: "A design link opens qr2g.it with this repository and design filled in. It does not create or prove a short link."
+  description: "Explains design links"

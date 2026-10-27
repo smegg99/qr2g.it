@@ -52,15 +52,23 @@ test('a failed script download is retried with a fresh script', async () => {
   assert.equal(await token, 'fresh-token')
 })
 
-test('temporary challenge errors retry before failing, without submitting an empty token', async () => {
+test('temporary challenge errors retry before failing, without submitting an empty token', async (t) => {
   const state = await setup()
   globalThis.window.turnstile = state.api
+  let resets = 0
+  state.api.reset = () => resets++
   const token = state.verifier.getToken()
   await flush()
+  t.mock.timers.enable({ apis: ['setTimeout'] })
   const options = state.options()
-  assert.equal(options.retry, 'auto')
-  options['error-callback']('600010')
+  assert.equal(options.retry, 'never')
+  assert.equal(options['error-callback']('600010'), true)
   assert.equal(state.removed(), 0)
+  let executions = 0
+  state.api.execute = () => executions++
+  t.mock.timers.tick(1000)
+  assert.equal(resets, 1)
+  assert.equal(executions, 1)
   options.callback('recovered-token')
   assert.equal(await token, 'recovered-token')
   assert.equal(state.removed(), 1)
@@ -72,9 +80,13 @@ test('repeated temporary challenge failures stop after three attempts', async ()
   const token = state.verifier.getToken()
   const rejected = assert.rejects(token, /600010/)
   await flush()
+  let resets = 0
+  state.api.reset = () => resets++
   for (let attempt = 0; attempt < 3; attempt++) state.options()['error-callback']('600010')
   await rejected
   assert.equal(state.removed(), 1)
+  await new Promise(resolve => setTimeout(resolve, 1100))
+  assert.equal(resets, 0, 'a retry fired after the widget was removed')
 })
 
 test('invalid widget configuration fails immediately', async () => {

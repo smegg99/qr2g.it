@@ -1,4 +1,4 @@
-<!-- app/components/home/QrControlField.vue -->
+<!-- app/components/generator/QrControlField.vue -->
 <template>
   <div class="control">
     <div class="control__label">

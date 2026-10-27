@@ -1,0 +1,34 @@
+outcome:
+  created:
+    value: "Utworzono nowy link"
+    description: "Result of a request that created the link"
+  existing:
+    value: "Znaleziono istniejący link"
+    description: "Result of a request for a repository that already had a link"
+prefill:
+  title:
+    value: "Pominięto część opcji z linku z wyglądem"
+    description: "Title of the prefilled link notice"
+  unknown:
+    value: "{param} nie jest obsługiwaną opcją."
+    description: "Unknown query parameter"
+    placeholders:
+      param: {type: string}
+  invalid:
+    value: "{param} ma niepoprawną wartość; użyto domyślnej."
+    description: "Invalid query parameter"
+    placeholders:
+      param: {type: string}
+  out_of_range:
+    value: "{param} jest poza zakresem; użyto domyślnej."
+    description: "Out of range query parameter"
+    placeholders:
+      param: {type: string}
+  repository:
+    value: "{param} nie wskazuje obsługiwanego repozytorium."
+    description: "Invalid repository parameter"
+    placeholders:
+      param: {type: string}
+retry:
+  value: "Ponów"
+  description: "Button that retries a failed request"
