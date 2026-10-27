@@ -5,6 +5,7 @@ import { palette } from '@smegg99/s99ab/theme'
 import vuetify, { transformAssetUrls } from 'vite-plugin-vuetify'
 import svgLoader from 'vite-svg-loader'
 import { BRAND } from './app/theme/brand'
+import { restoreTheme } from './app/theme/bootstrap'
 import { ACCENT_KEY, PAINT_KEY } from './app/theme/visitor'
 
 const version = readFileSync(fileURLToPath(new URL('../VERSION', import.meta.url)), 'utf8').trim()
@@ -33,7 +34,9 @@ export default defineNuxtConfig({
       ],
       link: [{ rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' }],
       script: [{
-        innerHTML: `(function(){try{var c=document.cookie.split('; ').find(function(x){return x.startsWith('qr2g.settings=')}),s=c?JSON.parse(decodeURIComponent(c.slice('qr2g.settings='.length))):{},m=s.themeMode||'auto',d=m==='dark'||(m==='auto'&&matchMedia('(prefers-color-scheme: dark)').matches),g=${JSON.stringify(grounds)};try{var p=JSON.parse(localStorage.getItem(${JSON.stringify(PAINT_KEY)})||'null');if(p&&p.seed===localStorage.getItem(${JSON.stringify(ACCENT_KEY)})&&/^#[0-9a-f]{6}$/i.test(p.light)&&/^#[0-9a-f]{6}$/i.test(p.dark))g=p}catch(e){}document.documentElement.style.backgroundColor=d?g.dark:g.light;document.documentElement.style.colorScheme=d?'dark':'light'}catch(e){}})()`,
+        innerHTML: `(${restoreTheme.toString()})(${JSON.stringify(grounds)}, ${JSON.stringify({
+          settings: 'qr2g.settings', accent: ACCENT_KEY, paint: PAINT_KEY,
+        })})`,
         tagPosition: 'head',
       }],
     },
