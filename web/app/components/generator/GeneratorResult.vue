@@ -150,24 +150,12 @@ onBeforeUnmount(() => {
 .result-refresh-btn--idle { opacity: 0; visibility: hidden; }
 .result-pane { scroll-margin-top: 64px; }
 @media (max-width: 600px) {
-  /* On a phone the head's controls become a bar at the bottom of the screen, matching the site header,
-     so they stay in reach while the long QR step scrolls. The title stays for assistive technology. */
-  .result-pane :deep(.pane-head) { min-height: 0; padding: 0; border: 0; }
+  /* On a phone the head holds only the controls, at touch size in fixed places: refresh, the steps
+     centred, close. The title stays for assistive technology. */
+  .result-pane :deep(.pane-head) { padding: 6px; }
   .result-pane :deep(.pane-head .pane-title) { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); }
   .result-pane :deep(.pane-meta) { display: none; }
-  .result-pane :deep(.pane-actions) {
-    position: fixed;
-    inset: auto 10px calc(10px + env(safe-area-inset-bottom));
-    z-index: 100;
-    display: grid;
-    grid-template-columns: 40px minmax(0, 1fr) 40px;
-    justify-items: center;
-    gap: 8px;
-    padding: 4px;
-    border: 1px solid rgb(var(--v-theme-line));
-    border-radius: var(--pane-radius);
-    background: rgb(var(--v-theme-chrome));
-  }
+  .result-pane :deep(.pane-actions) { flex: 1 1 auto; display: grid; grid-template-columns: 40px minmax(0, 1fr) 40px; justify-items: center; gap: 8px; }
   .result-pane :deep(.pane-actions > .v-btn) { width: 40px; height: 40px; color: rgb(var(--v-theme-ink2)); }
   .result-pane :deep(.pane-actions > .v-btn .v-icon) { font-size: 22px; }
   .result-step__go { flex: 1 1 auto; height: 44px; }

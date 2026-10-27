@@ -281,12 +281,10 @@ a:focus-visible, button:focus-visible { outline: 2px solid rgb(var(--v-theme-acc
   .repo-bar__go-text { display: none; }
   .repo-bar__go-icon { display: inline-flex; }
   .home-page:has(.result-pane), .docs-page, .sub-page { padding-top: 70px; }
-  /* The result's bottom bar (50px, 10px off the edge) needs this much room under the pane. */
-  .home-page:has(.result-pane) { padding-bottom: 70px; }
+  /* The result card starts under the short site header and keeps a small margin below. */
+  .home-page:has(.result-pane) { padding-top: 56px; padding-bottom: 24px; }
   .controls { grid-template-columns: minmax(0, 1fr); }
   .pane-head .key { min-width: 40px; padding-inline: 8px; }
-  /* The result's control bar sits at the bottom of a phone screen; toasts rise above it. */
-  :root:has(.result-pane) { --s99ab-toast-bottom: 76px; }
 }
 @media (hover: none) {
   .v-btn:hover > .v-btn__overlay { opacity: 0; }
