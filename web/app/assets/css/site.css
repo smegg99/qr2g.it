@@ -1,6 +1,4 @@
 /* app/assets/css/site.css */
-/* Frosted panes over a moving ground. Panes borrow SmeggTuner's head strips and Goptivum's
-   surface ladder: well (sunk) < chrome (pane) < raised (keys). Radius by kind: 4 control, 8 pane. */
 :root {
   --control-h: 36px;
   --s99ab-radius: 4px;
@@ -169,60 +167,6 @@ body { margin: 0; }
 .home-page:has(.result-pane) { padding-top: 84px; }
 .control__label { font-size: 12px; font-weight: 600; color: rgb(var(--v-theme-ink3)); }
 
-/* The short link as an instrument readout, after SmeggTuner's note panel: the slug is the big
-   glyph, and the full address and its repository are the labelled rows beside it. */
-.display {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  border: 1px solid color-mix(in srgb, rgb(var(--v-theme-line)) 80%, transparent);
-  border-radius: 8px;
-  background:
-    linear-gradient(to right, color-mix(in srgb, rgb(var(--v-theme-ink)) 5%, transparent) 1px, transparent 1px) 0 0 / 24px 24px,
-    linear-gradient(to bottom, color-mix(in srgb, rgb(var(--v-theme-ink)) 5%, transparent) 1px, transparent 1px) 0 0 / 24px 24px,
-    color-mix(in srgb, rgb(var(--v-theme-well)) 82%, transparent);
-  transition: border-color 0.2s ease;
-}
-.display__slug {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
-  gap: 6px;
-  min-width: 200px;
-  padding: 20px 32px 22px 24px;
-  border: 0;
-  border-right: 1px solid color-mix(in srgb, rgb(var(--v-theme-line)) 80%, transparent);
-  background: color-mix(in srgb, rgb(var(--v-theme-well)) 60%, transparent);
-  color: rgb(var(--v-theme-ink));
-  font: inherit;
-  text-align: left;
-  cursor: copy;
-}
-.display__host { font: 500 14px/1 var(--font-mono); color: rgb(var(--v-theme-ink3)); }
-.display__code {
-  font-size: clamp(68px, 10vw, 120px);
-  font-weight: 800;
-  line-height: 0.86;
-  letter-spacing: -0.045em;
-  font-variant-numeric: tabular-nums;
-  transition: color 0.2s ease;
-}
-.display__slug:hover .display__code { color: rgb(var(--v-theme-accent)); }
-.display--copied { border-color: rgb(var(--v-theme-accent)); }
-.display--copied .display__code { color: rgb(var(--v-theme-accent)); }
-.display__side { display: flex; flex-direction: column; justify-content: space-between; gap: 18px; min-width: 0; padding: 20px 22px; }
-.display__rows { display: flex; flex-direction: column; gap: 10px; margin: 0; }
-.display__row { display: grid; grid-template-columns: 96px minmax(0, 1fr); align-items: baseline; gap: 12px; }
-.display__row dt { font-size: 12px; font-weight: 600; color: rgb(var(--v-theme-ink3)); }
-.display__row dd { margin: 0; min-width: 0; }
-.display__url { font: 500 16px/1.4 var(--font-mono); color: rgb(var(--v-theme-ink)); text-decoration: none; overflow-wrap: anywhere; }
-.display__repo { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; font-size: 15px; font-weight: 600; color: rgb(var(--v-theme-ink)); text-decoration: none; }
-.display__repo span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.display__url:hover, .display__repo:hover { color: rgb(var(--v-theme-accent)); }
-.display__keys { display: flex; gap: 8px; }
-.display__keys .v-btn { height: 40px; }
-.display__keys .v-btn--icon { width: 40px; }
-.display__copy { flex: 0 1 180px; font-weight: 700; text-transform: none; letter-spacing: 0; }
 
 .qr-body { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 28px; align-items: start; }
 .preview { margin: 0; display: flex; flex-direction: column; gap: 8px; }
@@ -312,12 +256,6 @@ a:focus-visible, button:focus-visible { outline: 2px solid rgb(var(--v-theme-acc
   .repo-bar__go-text { display: none; }
   .repo-bar__go-icon { display: inline-flex; }
   .home-page:has(.result-pane), .docs-page { padding-top: 70px; }
-  .display { grid-template-columns: minmax(0, 1fr); }
-  .display__slug { min-width: 0; padding: 18px 18px 20px; border-right: 0; border-bottom: 1px solid color-mix(in srgb, rgb(var(--v-theme-line)) 80%, transparent); }
-  .display__code { font-size: 76px; }
-  .display__side { padding: 16px 18px 18px; }
-  .display__row { grid-template-columns: 84px minmax(0, 1fr); }
-  .display__copy { flex: 1 1 auto; }
   .controls { grid-template-columns: minmax(0, 1fr); }
   .pane-head .key { min-width: 40px; padding-inline: 8px; }
 }

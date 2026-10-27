@@ -1,10 +1,6 @@
 // app/theme/ground.ts
 import type { NeatConfig } from '@firecms/neat'
 
-// The animated ground behind every page. Each visit draws one scene, never the previous visit's,
-// so the site does not look the same twice in a row. A scene sets its own colours and its own
-// motion: curtains, slow blobs, warped ice, bands. The page accent stays teal in every scene.
-
 type Stop = readonly [color: string, influence: number]
 type Shape = Partial<Omit<NeatConfig, 'colors' | 'ref'>>
 
@@ -13,13 +9,11 @@ interface Scene {
   dark: readonly Stop[]
   light: readonly Stop[]
   shape: Shape
-  // Overrides for the dark variant, which sits on a near-black ground.
   darkShape?: Shape
 }
 
 export const SCENES: readonly Scene[] = [
   {
-    // Teal water under indigo, with one ember of amber.
     name: 'tide',
     dark: [['#0b4f4a', 0.2], ['#26307e', 0.22], ['#0f7a6c', 0.16], ['#5c3a12', 0.06], ['#151a3d', 0.24]],
     light: [['#a6e6da', 0.22], ['#c3c9f6', 0.22], ['#7fd0c3', 0.16], ['#efe3c6', 0.05], ['#dfe4f7', 0.24]],
@@ -27,7 +21,6 @@ export const SCENES: readonly Scene[] = [
     darkShape: { waveAmplitude: 4.2 },
   },
   {
-    // Tall green and violet curtains pulled sideways by the flow field.
     name: 'aurora',
     dark: [['#073d2c', 0.2], ['#11a37f', 0.14], ['#3b2a8a', 0.2], ['#86307a', 0.08], ['#08141c', 0.3]],
     light: [['#b3f0da', 0.2], ['#86dcc4', 0.16], ['#d2c8f7', 0.2], ['#f3c8e8', 0.1], ['#e8f4f2', 0.28]],
@@ -37,14 +30,12 @@ export const SCENES: readonly Scene[] = [
     },
   },
   {
-    // Slow plum and copper blobs with a cold teal edge.
     name: 'ember',
     dark: [['#2c1033', 0.24], ['#6e2a2a', 0.2], ['#a3561d', 0.14], ['#0d4a46', 0.05], ['#160b1a', 0.28]],
     light: [['#f2d5c6', 0.22], ['#efc2ae', 0.16], ['#e6d0f2', 0.2], ['#b8e6dc', 0.1], ['#f7ede6', 0.26]],
     shape: { waveFrequencyX: 1.2, waveFrequencyY: 1.6, waveAmplitude: 6.5, horizontalPressure: 4, verticalPressure: 3, colorBlending: 9, speed: 1.8 },
   },
   {
-    // Steel blue ice, folded by domain warp, with a white glint.
     name: 'glacier',
     dark: [['#0b2f4a', 0.24], ['#1d6390', 0.18], ['#0f7f88', 0.16], ['#b9dcea', 0.04], ['#071420', 0.3]],
     light: [['#cfe8f7', 0.24], ['#a6d6ea', 0.18], ['#bde8e3', 0.16], ['#ffffff', 0.12], ['#e3eef6', 0.26]],
@@ -55,7 +46,6 @@ export const SCENES: readonly Scene[] = [
     darkShape: { highlights: 4 },
   },
   {
-    // Moss and lichen with a gold seam.
     name: 'moss',
     dark: [['#1d3a1a', 0.24], ['#3f5c1e', 0.16], ['#0f6e5c', 0.18], ['#6e5c18', 0.08], ['#0c1710', 0.3]],
     light: [['#d6ecc2', 0.22], ['#c3e1ab', 0.16], ['#ade0d1', 0.18], ['#f1e5b2', 0.1], ['#eef4e6', 0.26]],
@@ -65,7 +55,6 @@ export const SCENES: readonly Scene[] = [
     },
   },
   {
-    // Horizontal bands of indigo, rose and a low teal light.
     name: 'dusk',
     dark: [['#28205e', 0.22], ['#5c2a6c', 0.16], ['#a04a5c', 0.1], ['#0f6a70', 0.12], ['#110e2a', 0.3]],
     light: [['#d5cff6', 0.22], ['#ecc8e9', 0.16], ['#f6d2c8', 0.12], ['#bfe6e2', 0.14], ['#efecf8', 0.26]],
@@ -75,7 +64,7 @@ export const SCENES: readonly Scene[] = [
 
 const LAST_KEY = 'qr2g.ground'
 
-// One draw per page load; a reload draws again, skipping the scene the last visit showed.
+// Avoid repeating the previous scene across page loads.
 export function pickScene(): Scene {
   let last = ''
   try {
@@ -90,7 +79,7 @@ export function pickScene(): Scene {
     localStorage.setItem(LAST_KEY, scene.name)
   }
   catch {
-    // As above.
+    // Scene selection still works without session storage.
   }
   return scene
 }

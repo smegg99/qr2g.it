@@ -22,7 +22,6 @@
 </template>
 
 <script setup lang="ts">
-// Keys sharing borders. `choice` keeps one pressed, as a segmented control; otherwise each key is an action.
 export interface KeyItem {
   value: string
   label: string

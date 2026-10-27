@@ -21,6 +21,5 @@
 </template>
 
 <script setup lang="ts">
-// A part's name on the left, a quiet reading on the right, then its keys.
 withDefaults(defineProps<{ title: string, tag?: 'h1' | 'h2' | 'h3', id?: string }>(), { tag: 'h2', id: undefined })
 </script>
