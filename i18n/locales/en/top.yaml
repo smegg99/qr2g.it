@@ -1,0 +1,60 @@
+title:
+  value: "Most visited in the last 30 days"
+  description: "Heading above the top repositories on the home page"
+total:
+  value: "Clicks"
+  description: "Label of the all-time filtered redirect count on a top repository card"
+month:
+  value: "30 days"
+  description: "Label of the last-30-days filtered redirect count on a top repository card"
+last:
+  value: "Last click"
+  description: "Label of the time of the latest filtered redirect"
+never:
+  value: "Not recorded"
+  description: "Shown when no latest redirect time is stored yet"
+now:
+  value: "just now"
+  description: "Latest redirect less than a minute ago"
+clicks:
+  plural:
+    argument: n
+    forms:
+      one: "{n} click"
+      other: "{n} clicks"
+  description: "Clicks on one day in the sparkline tooltip; n is a formatted number"
+  placeholders:
+    n: {type: integer}
+notCollected:
+  value: "not counted"
+  description: "Sparkline tooltip for a day without collection"
+peak:
+  value: "Peak {n} a day"
+  description: "Busiest day of the chart; n is a formatted number"
+  placeholders:
+    n: {type: string}
+terminal:
+  value: "From a terminal"
+  description: "Heading of the curl examples on the home page"
+curlQr:
+  value: "?qr adds the QR code; without it, only the link"
+  description: "Note next to the curl example; ?qr is literal"
+copy:
+  value: "Copy command"
+  description: "Button that copies a curl example"
+coverage:
+  value: "{mapped} of ~{total} GitHub repositories linked"
+  description: "One-line caption of the coverage bar; total is a compact number such as 276M"
+  placeholders:
+    mapped: {type: string}
+    total: {type: string}
+mapped:
+  value: "{mapped} GitHub repositories have a qr2g.it link"
+  description: "Coverage caption while the GitHub total is unknown; mapped is a formatted number"
+  placeholders:
+    mapped: {type: string}
+chartLabel:
+  value: "Daily clicks of {name} in the last 30 days"
+  description: "Accessible name of a sparkline; name is owner/name"
+  placeholders:
+    name: {type: string}

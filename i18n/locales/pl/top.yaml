@@ -1,0 +1,62 @@
+title:
+  value: "Najczęściej odwiedzane w ostatnich 30 dniach"
+  description: "Heading above the top repositories on the home page"
+total:
+  value: "Kliknięcia"
+  description: "Label of the all-time filtered redirect count on a top repository card"
+month:
+  value: "30 dni"
+  description: "Label of the last-30-days filtered redirect count on a top repository card"
+last:
+  value: "Ostatnie kliknięcie"
+  description: "Label of the time of the latest filtered redirect"
+never:
+  value: "Brak danych"
+  description: "Shown when no latest redirect time is stored yet"
+now:
+  value: "przed chwilą"
+  description: "Latest redirect less than a minute ago"
+clicks:
+  plural:
+    argument: n
+    forms:
+      one: "{n} kliknięcie"
+      few: "{n} kliknięcia"
+      many: "{n} kliknięć"
+      other: "{n} kliknięcia"
+  description: "Clicks on one day in the sparkline tooltip; n is a formatted number"
+  placeholders:
+    n: {type: integer}
+notCollected:
+  value: "nie liczono"
+  description: "Sparkline tooltip for a day without collection"
+peak:
+  value: "Szczyt {n} dziennie"
+  description: "Busiest day of the chart; n is a formatted number"
+  placeholders:
+    n: {type: string}
+terminal:
+  value: "Z terminala"
+  description: "Heading of the curl examples on the home page"
+curlQr:
+  value: "?qr dodaje kod QR; bez niego sam link"
+  description: "Note next to the curl example; ?qr is literal"
+copy:
+  value: "Kopiuj polecenie"
+  description: "Button that copies a curl example"
+coverage:
+  value: "{mapped} z ~{total} repozytoriów GitHub ma link"
+  description: "One-line caption of the coverage bar; total is a compact number such as 276M"
+  placeholders:
+    mapped: {type: string}
+    total: {type: string}
+mapped:
+  value: "Repozytoria GitHub z linkiem qr2g.it: {mapped}"
+  description: "Coverage caption while the GitHub total is unknown; mapped is a formatted number"
+  placeholders:
+    mapped: {type: string}
+chartLabel:
+  value: "Dzienne kliknięcia {name} w ostatnich 30 dniach"
+  description: "Accessible name of a sparkline; name is owner/name"
+  placeholders:
+    name: {type: string}
