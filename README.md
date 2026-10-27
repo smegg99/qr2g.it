@@ -145,6 +145,15 @@ The production database is `/opt/qr2git/home/data/qr2git.sqlite`, outside the ch
 
 ## Import and backup
 
+Download the full production database through the `ovh` SSH alias:
+
+```sh
+just db-download
+sqlitebrowser data/qr2git-production.sqlite
+```
+
+This uses SQLite's online backup API, includes committed WAL data, and checks integrity before saving. It requires Python 3 locally and on the VPS, plus passwordless sudo through SSH. To choose another destination or host, use `just db-download /path/to/snapshot.sqlite ovh`. Close the database preview before refreshing the snapshot.
+
 Stop the destination service before importing. Python 3 and a `pg_restore` version capable of reading the dump are required:
 
 ```sh

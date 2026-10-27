@@ -129,6 +129,11 @@ release: build-web
 db-shell:
     sqlite3 data/qr2git.sqlite
 
+# Download a complete production SQLite snapshot over SSH.
+[positional-arguments]
+db-download destination="data/qr2git-production.sqlite" host="ovh":
+    python3 scripts/download-db.py "$1" --host "$2"
+
 # Apply migrations by starting the backend.
 migrate:
     go run .
