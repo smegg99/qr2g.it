@@ -36,4 +36,8 @@ const { t } = useI18n()
 
 <style scoped>
 .steps__key { display: inline-flex; align-items: center; justify-content: center; width: 32px; min-width: 32px; height: 32px; padding: 0; }
+@media (max-width: 600px) {
+  .steps__key { width: 48px; min-width: 48px; height: 40px; }
+  .steps__key :deep(.v-icon) { font-size: 22px; }
+}
 </style>

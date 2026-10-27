@@ -1,6 +1,9 @@
 <!-- app/components/generator/GeneratorResult.vue -->
 <template>
-  <Pane class="result-pane">
+  <Pane
+    ref="pane"
+    class="result-pane"
+  >
     <PaneHead
       :title="t('result.title')"
       tag="h1"
@@ -10,6 +13,7 @@
           icon
           variant="text"
           size="small"
+          :class="['result-refresh-btn', { 'result-refresh-btn--idle': step === 'qr' }]"
           :aria-busy="refreshing || undefined"
           :aria-label="t('result.refresh')"
           :title="t('result.refresh')"
@@ -69,6 +73,7 @@
 
 <script setup lang="ts">
 import { useQueryCache } from '@pinia/colada'
+import type { ComponentPublicInstance } from 'vue'
 import Pane from '~/components/common/Pane.vue'
 import { getLinkStatsQueryKey } from '~/generated/api/@pinia/colada.gen'
 import PaneHead from '~/components/common/PaneHead.vue'
@@ -88,6 +93,12 @@ const router = useRouter()
 const step = computed<ResultStep>({
   get: () => (route.hash === '#qr' ? 'qr' : 'link'),
   set: next => void router.push({ hash: next === 'qr' ? '#qr' : '' }),
+})
+// On a phone the QR step is taller than the screen; a switch made further down starts the new step at the pane's top.
+const pane = useTemplateRef<ComponentPublicInstance>('pane')
+watch(step, () => {
+  const el = pane.value?.$el as HTMLElement | undefined
+  if (el && el.getBoundingClientRect().top < 0) el.scrollIntoView({ block: 'start' })
 })
 // Refresh reads the link and its clicks again; the counters roll to the new numbers. The icon turns
 // once per click and keeps turning while the work runs, so even an instant answer is seen.
@@ -134,10 +145,32 @@ onBeforeUnmount(() => {
 .step-forward-enter-from, .step-back-leave-to { opacity: 0; transform: translateX(10px); }
 .step-forward-leave-to, .step-back-enter-from { opacity: 0; transform: translateX(-10px); }
 .result-refresh { transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1); }
+/* The QR code shows no counts, so refresh has nothing to update there; its place stays so nothing moves. */
+.result-refresh-btn { transition: opacity 0.15s ease, visibility 0.15s; }
+.result-refresh-btn--idle { opacity: 0; visibility: hidden; }
+.result-pane { scroll-margin-top: 64px; }
 @media (max-width: 600px) {
-  /* The steps need the head's width on a phone; the title stays for assistive technology. */
+  /* On a phone the head's controls become a bar at the bottom of the screen, matching the site header,
+     so they stay in reach while the long QR step scrolls. The title stays for assistive technology. */
+  .result-pane :deep(.pane-head) { min-height: 0; padding: 0; border: 0; }
   .result-pane :deep(.pane-head .pane-title) { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); }
-  .result-pane :deep(.pane-actions) { flex: 1 1 auto; justify-content: space-between; }
+  .result-pane :deep(.pane-meta) { display: none; }
+  .result-pane :deep(.pane-actions) {
+    position: fixed;
+    inset: auto 10px calc(10px + env(safe-area-inset-bottom));
+    z-index: 100;
+    display: grid;
+    grid-template-columns: 40px minmax(0, 1fr) 40px;
+    justify-items: center;
+    gap: 8px;
+    padding: 4px;
+    border: 1px solid rgb(var(--v-theme-line));
+    border-radius: var(--pane-radius);
+    background: rgb(var(--v-theme-chrome));
+  }
+  .result-pane :deep(.pane-actions > .v-btn) { width: 40px; height: 40px; color: rgb(var(--v-theme-ink2)); }
+  .result-pane :deep(.pane-actions > .v-btn .v-icon) { font-size: 22px; }
+  .result-step__go { flex: 1 1 auto; height: 44px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .result-refresh { transition: none; }
