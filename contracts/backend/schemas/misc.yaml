@@ -1,0 +1,37 @@
+# contracts/backend/schemas/misc.yaml
+
+ContactRequest:
+  type: object
+  additionalProperties: false
+  properties:
+    turnstileToken:
+      type: string
+      maxLength: 4096
+      description: Browser verification token; empty when the check could not run.
+
+Contact:
+  type: object
+  additionalProperties: false
+  required: [email]
+  properties:
+    email:
+      type: string
+      description: The address this request may use. Never cache it.
+
+AutomationUsage:
+  type: object
+  additionalProperties: false
+  required: [name, dailyQuota, usedToday, resetsAt]
+  properties:
+    name:
+      type: string
+    dailyQuota:
+      type: integer
+      minimum: 1
+    usedToday:
+      type: integer
+      minimum: 0
+    resetsAt:
+      type: string
+      format: date-time
+      description: Start of the next UTC day.

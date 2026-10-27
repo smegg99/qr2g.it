@@ -1,0 +1,19 @@
+# contracts/backend/paths/automation.yaml
+
+usage:
+  get:
+    tags: [automation]
+    operationId: getAutomationUsage
+    summary: Read the token's quota
+    description: Does not count against the quota.
+    security:
+      - automationToken: []
+    responses:
+      '200':
+        description: Today's usage.
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/misc.yaml#/AutomationUsage
+      '401':
+        $ref: ../responses/error.yaml#/Unauthorized

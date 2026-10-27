@@ -1,0 +1,90 @@
+# contracts/backend/schemas/statistics.yaml
+
+LinkStats:
+  type: object
+  description: >
+    Daily filtered-redirect aggregates over the last 30 UTC days. Days before
+    `collectionStartedOn` are unknown, not zero. Collection pauses are listed.
+  additionalProperties: false
+  required: [slug, metric, collectionStartedOn, collecting, total, total7, total30, days, pauses]
+  properties:
+    slug:
+      type: string
+    metric:
+      type: string
+      enum: [filtered_redirects]
+    collectionStartedOn:
+      type: string
+      format: date
+    collecting:
+      type: boolean
+    total:
+      type: integer
+      minimum: 0
+      description: Filtered redirects since collection started.
+    lastRedirectAt:
+      type: string
+      format: date-time
+      description: Time of the latest filtered redirect; absent before the first one.
+    total7:
+      type: integer
+      minimum: 0
+    total30:
+      type: integer
+      minimum: 0
+    days:
+      type: array
+      description: Oldest first. Days without collection are omitted.
+      items:
+        $ref: '#/StatsDay'
+    pauses:
+      type: array
+      items:
+        $ref: '#/StatsPause'
+
+StatsDay:
+  type: object
+  additionalProperties: false
+  required: [date, redirects]
+  properties:
+    date:
+      type: string
+      format: date
+    redirects:
+      type: integer
+      minimum: 0
+
+StatsPause:
+  type: object
+  additionalProperties: false
+  required: [from, reason]
+  properties:
+    from:
+      type: string
+      format: date
+    to:
+      type: string
+      format: date
+      description: Absent while the pause continues.
+    reason:
+      type: string
+      enum: [owner_noanalytics]
+
+Coverage:
+  type: object
+  additionalProperties: false
+  required: [mapped]
+  properties:
+    mapped:
+      type: integer
+      minimum: 0
+      description: Links that currently redirect to a public repository.
+    publicRepositories:
+      type: integer
+      format: int64
+      minimum: 1
+      description: GitHub's search count of public repositories, forks included; a lower bound.
+    countedAt:
+      type: string
+      format: date-time
+      description: When GitHub was last asked.

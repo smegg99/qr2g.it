@@ -1,0 +1,31 @@
+# contracts/backend/paths/contact.yaml
+
+reveal:
+  post:
+    tags: [contact]
+    operationId: revealContact
+    summary: Reveal the contact address
+    description: >
+      A verified browser check receives the main address. A missing, failed or
+      unverifiable check receives the catch-all address instead; that is not a
+      judgement that the caller is a bot. Neither address appears in the site
+      bundle or page metadata.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/misc.yaml#/ContactRequest
+    responses:
+      '200':
+        description: The address to use.
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/misc.yaml#/Contact
+      '400':
+        $ref: ../responses/error.yaml#/BadRequest
+      '429':
+        $ref: ../responses/error.yaml#/TooManyRequests
+      '503':
+        $ref: ../responses/error.yaml#/Unavailable

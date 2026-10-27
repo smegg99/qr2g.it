@@ -1,0 +1,162 @@
+# contracts/backend/paths/links.yaml
+
+links:
+  post:
+    tags: [links]
+    operationId: createLink
+    summary: Create or reuse a short link
+    description: >
+      Verifies a public GitHub repository and returns its canonical link.
+      201 means this request created the link; 200 means the repository
+      already had one. Repeating the request never creates a second link, so it
+      is safe to retry. Browsers send a Turnstile token; automation sends an
+      automation token instead.
+    security:
+      - {}
+      - automationToken: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/link.yaml#/CreateLinkRequest
+    responses:
+      '200':
+        description: Existing link found.
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/link.yaml#/Link
+      '201':
+        description: New link created.
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/link.yaml#/Link
+      '400':
+        $ref: ../responses/error.yaml#/BadRequest
+      '401':
+        $ref: ../responses/error.yaml#/Unauthorized
+      '403':
+        $ref: ../responses/error.yaml#/Forbidden
+      '404':
+        $ref: ../responses/error.yaml#/NotFound
+      '410':
+        $ref: ../responses/error.yaml#/Gone
+      '429':
+        $ref: ../responses/error.yaml#/TooManyRequests
+      '503':
+        $ref: ../responses/error.yaml#/Unavailable
+
+batch:
+  post:
+    tags: [links, automation]
+    operationId: createLinks
+    summary: Create or reuse up to 25 links
+    description: >
+      Processes each repository independently and in order. One failure does
+      not stop the rest; each entry carries its own outcome or error. Each
+      entry counts once against the token's daily quota.
+    security:
+      - automationToken: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: ../schemas/link.yaml#/BatchRequest
+    responses:
+      '200':
+        description: Per-entry results.
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/link.yaml#/BatchResult
+      '400':
+        $ref: ../responses/error.yaml#/BadRequest
+      '401':
+        $ref: ../responses/error.yaml#/Unauthorized
+      '429':
+        $ref: ../responses/error.yaml#/TooManyRequests
+
+lookup:
+  get:
+    tags: [links]
+    operationId: lookupLink
+    summary: Read an existing link by repository
+    description: >
+      A pure read: it never creates a link and never calls GitHub. A
+      repository renamed since the last verification may not be found by its
+      new name until qr2g.it verifies it again.
+    parameters:
+      - name: repository
+        in: query
+        required: true
+        description: owner/name.
+        schema:
+          type: string
+          maxLength: 140
+    responses:
+      '200':
+        description: The canonical link.
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/link.yaml#/Link
+      '400':
+        $ref: ../responses/error.yaml#/BadRequest
+      '404':
+        $ref: ../responses/error.yaml#/NotFound
+      '429':
+        $ref: ../responses/error.yaml#/TooManyRequests
+
+link:
+  get:
+    tags: [links]
+    operationId: getLink
+    summary: Read link metadata
+    description: Stored state without a GitHub call. Also served at `/{slug}+`.
+    parameters:
+      - $ref: ../parameters/path.yaml#/Slug
+    responses:
+      '200':
+        description: The link.
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/link.yaml#/Link
+      '404':
+        $ref: ../responses/error.yaml#/NotFound
+      '429':
+        $ref: ../responses/error.yaml#/TooManyRequests
+
+resolve:
+  get:
+    tags: [links]
+    operationId: resolveLink
+    summary: Resolve a link as JSON
+    description: >
+      Verifies a stale link against GitHub, like the redirect does, and
+      answers its state without redirecting. Fails closed: a stale link is not
+      advertised as active when verification fails. Not counted as a redirect.
+    parameters:
+      - $ref: ../parameters/path.yaml#/Slug
+    responses:
+      '200':
+        description: Active link.
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/link.yaml#/Link
+      '404':
+        $ref: ../responses/error.yaml#/NotFound
+      '410':
+        description: The link no longer redirects.
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/link.yaml#/Link
+      '429':
+        $ref: ../responses/error.yaml#/TooManyRequests
+      '503':
+        $ref: ../responses/error.yaml#/Unavailable

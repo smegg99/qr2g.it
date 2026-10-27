@@ -1,0 +1,29 @@
+# contracts/backend/paths/policy.yaml
+
+refresh:
+  post:
+    tags: [policy]
+    operationId: refreshLinkPolicy
+    summary: Refresh repository settings
+    description: >
+      Re-reads availability and the owner's opt-out markers now. Concurrent
+      requests share one check, and a link is checked at most once per
+      cooldown; inside it the request answers 429 with `Retry-After`. A failed
+      check keeps the previous restrictions and answers 503.
+    parameters:
+      - $ref: ../parameters/path.yaml#/Slug
+    responses:
+      '200':
+        description: The link after the check.
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/link.yaml#/Link
+      '404':
+        $ref: ../responses/error.yaml#/NotFound
+      '410':
+        $ref: ../responses/error.yaml#/Gone
+      '429':
+        $ref: ../responses/error.yaml#/TooManyRequests
+      '503':
+        $ref: ../responses/error.yaml#/Unavailable

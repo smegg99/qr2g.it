@@ -1,0 +1,44 @@
+# contracts/backend/paths/statistics.yaml
+
+stats:
+  get:
+    tags: [statistics]
+    operationId: getLinkStats
+    summary: Read filtered redirect aggregates
+    description: >
+      Only for repositories eligible for public discovery. The canonical link is
+      shared, so this is combined usage across everyone who shares it.
+    parameters:
+      - $ref: ../parameters/path.yaml#/Slug
+    responses:
+      '200':
+        description: Aggregates.
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/statistics.yaml#/LinkStats
+      '404':
+        $ref: ../responses/error.yaml#/NotFound
+      '429':
+        $ref: ../responses/error.yaml#/TooManyRequests
+
+coverage:
+  get:
+    tags: [statistics]
+    operationId: getCoverage
+    summary: How many public GitHub repositories have a link
+    description: >
+      Counts links that currently redirect, next to GitHub's own count of
+      public repositories including forks. GitHub's number comes from its
+      search, which stops counting early on such a broad query, so it is a
+      lower bound; it is refreshed at most every 12 hours and is absent while
+      GitHub cannot be asked.
+    responses:
+      '200':
+        description: The current counts.
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/statistics.yaml#/Coverage
+      '429':
+        $ref: ../responses/error.yaml#/TooManyRequests

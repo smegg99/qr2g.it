@@ -1,0 +1,6 @@
+# contracts/backend/redocly.yaml
+apis:
+  backend@v1:
+    root: ./openapi.yaml
+extends:
+  - recommended-strict

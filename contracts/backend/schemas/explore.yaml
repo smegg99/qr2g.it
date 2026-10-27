@@ -1,0 +1,127 @@
+# contracts/backend/schemas/explore.yaml
+
+ExploreItem:
+  type: object
+  additionalProperties: false
+  required: [slug, url, owner, name, fullName, archived, firstAddedOn]
+  properties:
+    slug:
+      type: string
+    url:
+      type: string
+      description: Canonical short URL.
+    owner:
+      type: string
+    name:
+      type: string
+    fullName:
+      type: string
+    description:
+      type: string
+    language:
+      type: string
+    archived:
+      type: boolean
+    firstAddedOn:
+      type: string
+      format: date
+    redirects7:
+      type: integer
+      minimum: 0
+      description: Filtered redirects in the last 7 UTC days. Absent when collection is stopped.
+    redirects30:
+      type: integer
+      minimum: 0
+      description: Filtered redirects in the last 30 UTC days. Absent when collection is stopped.
+
+RepositoryPage:
+  allOf:
+    - $ref: ../../shared/schemas/pagination.yaml#/PageBase
+    - type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/ExploreItem'
+
+RepositoryDetail:
+  type: object
+  additionalProperties: false
+  required: [item, initialFullName, analytics]
+  properties:
+    item:
+      $ref: '#/ExploreItem'
+    initialFullName:
+      type: string
+    verifiedAt:
+      type: string
+      format: date-time
+    analytics:
+      type: string
+      enum: [collecting, owner_noanalytics]
+
+LanguageList:
+  type: object
+  additionalProperties: false
+  required: [items]
+  properties:
+    items:
+      type: array
+      items:
+        $ref: '#/LanguageCount'
+
+LanguageCount:
+  type: object
+  additionalProperties: false
+  required: [name, count]
+  properties:
+    name:
+      type: string
+    count:
+      type: integer
+      minimum: 1
+
+TopRepositoryList:
+  type: object
+  additionalProperties: false
+  required: [items]
+  properties:
+    items:
+      type: array
+      items:
+        $ref: '#/TopRepository'
+
+TopRepository:
+  type: object
+  additionalProperties: false
+  required: [slug, url, fullName, total, total30, days]
+  properties:
+    slug:
+      type: string
+    url:
+      type: string
+      description: Canonical short URL.
+    fullName:
+      type: string
+    description:
+      type: string
+    language:
+      type: string
+    total:
+      type: integer
+      minimum: 0
+      description: Filtered redirects since collection started.
+    total30:
+      type: integer
+      minimum: 0
+      description: Filtered redirects in the last 30 UTC days.
+    lastRedirectAt:
+      type: string
+      format: date-time
+      description: Time of the latest filtered redirect. Absent before the first one is recorded.
+    days:
+      type: array
+      description: The last 30 UTC days, oldest first. Days without collection are omitted.
+      items:
+        $ref: ./statistics.yaml#/StatsDay

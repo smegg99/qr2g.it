@@ -1,0 +1,8 @@
+{
+  "name": "qr2git-contracts",
+  "private": true,
+  "packageManager": "pnpm@10.31.0",
+  "devDependencies": {
+    "@redocly/cli": "2.38.0"
+  }
+}

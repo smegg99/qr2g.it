@@ -1,0 +1,11 @@
+# contracts/backend/parameters/path.yaml
+
+Slug:
+  name: slug
+  in: path
+  required: true
+  description: Uppercase base36 slug of the link, e.g. `2` or `AB12`.
+  schema:
+    type: string
+    pattern: '^[1-9A-Z][0-9A-Z]{0,11}$'
+    examples: ['2']

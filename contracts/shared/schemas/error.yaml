@@ -1,0 +1,34 @@
+# Copied from s99ab by scripts/shared-contracts.py. Do not edit.
+# Run `just shared-contracts` after bumping s99ab.
+# contracts/schemas/error.yaml
+#
+# Error body for every failing status. apierr marshals this shape.
+
+Error:
+  type: object
+  required: [code, message]
+  additionalProperties: false
+  properties:
+    code:
+      type: string
+      pattern: '^[a-z][a-z0-9_]*$'
+      description: >
+        Stable machine-readable code. Clients branch on this, never on the
+        message or the status. Never localised, never reworded.
+      examples: [not_found, conflict, validation, unauthorized, internal]
+    message:
+      type: string
+      description: >
+        i18n key the client resolves. Never English prose - the server does not
+        know the caller's language.
+      examples: [error.notFound, session.nameTooShort]
+    details:
+      type: object
+      description: >
+        Field-level detail, keyed by field path. Present on validation errors,
+        absent otherwise. Values are codes, not sentences.
+      additionalProperties:
+        type: string
+      examples:
+        - name: too_short
+          email: invalid_format

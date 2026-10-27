@@ -4,3 +4,4 @@ bin/
 release/
 *.tar.gz
 data/
+contracts/node_modules/

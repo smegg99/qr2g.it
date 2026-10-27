@@ -1,0 +1,82 @@
+# contracts/backend/responses/error.yaml
+#
+# Every failing status carries the same envelope. `message` is an i18n key
+# such as `errors.repo_not_found`; clients branch on `code`.
+
+BadRequest:
+  description: >
+    The request could not be used: `invalid_body` (JSON that does not parse
+    or has unknown fields), `invalid_url` (not a public GitHub repository
+    URL), `invalid_repository` (not an owner/name pair) or `invalid_design`
+    (an asset option out of range; `details` maps the option to a code).
+  content:
+    application/json:
+      schema:
+        $ref: ../../shared/schemas/error.yaml#/Error
+
+Unauthorized:
+  description: >
+    `token_required` when the operation needs an automation token, or
+    `token_invalid` when the presented token is unknown or revoked.
+  content:
+    application/json:
+      schema:
+        $ref: ../../shared/schemas/error.yaml#/Error
+
+Forbidden:
+  description: >
+    `repo_private` for a private repository, `turnstile_required` when no
+    browser verification token was sent, or `turnstile_failed` when
+    verification rejected it. A failed check does not classify the caller as a
+    bot; retry from a browser or use an automation token.
+  content:
+    application/json:
+      schema:
+        $ref: ../../shared/schemas/error.yaml#/Error
+
+NotFound:
+  description: >
+    `not_found` for an unknown slug, `link_not_found` when a repository has no
+    qr2g.it link yet, `repo_not_found` when GitHub does not show the
+    repository publicly, or `not_listed` when the repository is not eligible
+    for public discovery or statistics.
+  content:
+    application/json:
+      schema:
+        $ref: ../../shared/schemas/error.yaml#/Error
+
+Gone:
+  description: >
+    `link_unavailable`: the repository is no longer publicly available or the
+    link was removed. The slug is never reused; a repository that becomes
+    public again recovers the same link.
+  content:
+    application/json:
+      schema:
+        $ref: ../../shared/schemas/error.yaml#/Error
+
+TooManyRequests:
+  description: >
+    `rate_limited` for a per-client budget or a refresh cooldown, or
+    `quota_exceeded` for an automation token's daily quota. Wait for
+    `Retry-After` seconds before retrying.
+  headers:
+    Retry-After:
+      description: Seconds to wait before retrying.
+      schema:
+        type: integer
+        minimum: 1
+  content:
+    application/json:
+      schema:
+        $ref: ../../shared/schemas/error.yaml#/Error
+
+Unavailable:
+  description: >
+    A dependency failed and the request can be retried with backoff:
+    `github_unavailable`, `github_rate_limited`, `verification_failed`,
+    `turnstile_unavailable` or `contact_unavailable`.
+  content:
+    application/json:
+      schema:
+        $ref: ../../shared/schemas/error.yaml#/Error

@@ -1,0 +1,186 @@
+# contracts/backend/paths/assets.yaml
+#
+# The website's preview and every download use this operation, so the
+# parameter names are also the prefilled design-link format.
+
+asset:
+  get:
+    tags: [assets]
+    operationId: renderLinkAsset
+    summary: Render a QR code, share card or badge
+    description: >
+      Renders the link with a website preset. The QR keeps a quiet zone of at
+      least four modules and requires a contrast ratio of at least 4.5
+      between modules and tile; light modules on a dark tile are allowed. Text is drawn as vector outlines, so the
+      file needs no fonts. A rendered preview does not prove scan reliability
+      for every printer, screen or camera. Not counted as a redirect.
+    parameters:
+      - $ref: ../parameters/path.yaml#/Slug
+      - name: preset
+        in: query
+        description: >
+          `qr` standalone code, `presentation` 16:9 slide card, `poster` 3:4
+          card with the description, `label` monochrome physical label,
+          `badge` small README badge.
+        schema:
+          type: string
+          enum: [qr, presentation, poster, label, badge]
+          default: qr
+      - name: format
+        in: query
+        schema:
+          type: string
+          enum: [svg, png, jpg]
+          default: svg
+        description: JPG is always opaque, so `badge` and `transparent` reject it.
+      - name: theme
+        in: query
+        description: Card background; independent of the website's appearance.
+        schema:
+          type: string
+          enum: [light, dark]
+          default: light
+      - name: fg
+        in: query
+        description: QR module colour, `#rrggbb`.
+        schema:
+          type: string
+          pattern: '^#[0-9a-fA-F]{6}$'
+      - name: bg
+        in: query
+        description: QR tile colour, `#rrggbb`.
+        schema:
+          type: string
+          pattern: '^#[0-9a-fA-F]{6}$'
+      - name: accent
+        in: query
+        description: Optional card accent, `#rrggbb`.
+        schema:
+          type: string
+          pattern: '^#[0-9a-fA-F]{6}$'
+      - name: caption
+        in: query
+        description: Export-specific caption. Does not change repository metadata.
+        schema:
+          type: string
+          maxLength: 140
+      - name: ec
+        in: query
+        description: >
+          QR error correction level. Defaults to `H` with the logo and `M`
+          without it. The logo needs `H`.
+        schema:
+          type: string
+          enum: [L, M, Q, H]
+      - name: margin
+        in: query
+        description: Quiet zone in modules.
+        schema:
+          type: integer
+          minimum: 4
+          maximum: 16
+          default: 4
+      - name: radius
+        in: query
+        description: Tile corner radius as a percentage of the largest radius that cannot clip the symbol.
+        schema:
+          type: integer
+          minimum: 0
+          maximum: 100
+          default: 0
+      - name: size
+        in: query
+        description: >
+          Pixel width: `qr` 128-4000 (default 1024), `presentation` 960-3840
+          (default 1920), `poster` 600-3000 (default 1200). Ignored by `label`
+          and `badge`.
+        schema:
+          type: integer
+          minimum: 128
+          maximum: 4000
+      - name: logo
+        in: query
+        description: >
+          Draw the qr2g.it fox in the centre of the code, in the QR colour, on
+          modules cleared for it. Ignored by `badge`.
+        schema:
+          type: boolean
+          default: true
+      - name: transparent
+        in: query
+        description: Omit the tile background. `qr` preset with `svg` or `png` only.
+        schema:
+          type: boolean
+          default: false
+      - name: labelWidth
+        in: query
+        description: Label width in millimetres.
+        schema:
+          type: integer
+          minimum: 20
+          maximum: 200
+          default: 40
+      - name: labelHeight
+        in: query
+        description: Label height in millimetres.
+        schema:
+          type: integer
+          minimum: 20
+          maximum: 200
+          default: 50
+      - name: dpi
+        in: query
+        description: Label raster resolution. Printer scaling still affects the physical size.
+        schema:
+          type: integer
+          minimum: 150
+          maximum: 1200
+          default: 300
+      - name: download
+        in: query
+        description: Answer `Content-Disposition` attachment instead of inline.
+        schema:
+          type: boolean
+          default: false
+    responses:
+      '200':
+        description: >
+          The rendered file. `Content-Disposition` carries a filename such as
+          `Goptivum-presentation.png`.
+        headers:
+          Content-Disposition:
+            schema:
+              type: string
+          Cache-Control:
+            description: Successful renders may be cached for an hour; errors are not cached.
+            schema:
+              type: string
+          X-Asset-Width:
+            description: Width in pixels.
+            schema:
+              type: integer
+          X-Asset-Height:
+            description: Height in pixels.
+            schema:
+              type: integer
+        content:
+          image/svg+xml:
+            schema:
+              type: string
+              format: binary
+          image/png:
+            schema:
+              type: string
+              format: binary
+          image/jpeg:
+            schema:
+              type: string
+              format: binary
+      '400':
+        $ref: ../responses/error.yaml#/BadRequest
+      '404':
+        $ref: ../responses/error.yaml#/NotFound
+      '410':
+        $ref: ../responses/error.yaml#/Gone
+      '429':
+        $ref: ../responses/error.yaml#/TooManyRequests

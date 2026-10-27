@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # scripts/check-generated.py
-"""Check generated config types, the shared theme package, and deploy manifest."""
+"""Check generated config, contract outputs, the shared theme package, and deploy manifest."""
 import hashlib
 import json
 import re
@@ -35,14 +35,39 @@ def check_config():
             run(*cue, 'vet', '-d', '#Config', str(ROOT / 'schema/config.cue'), str(config))
 
 
-def check_swagger():
-    swag = shlex.split(subprocess.check_output(['go', 'tool', '-n', 'swag'], cwd=ROOT, text=True))
-    with tempfile.TemporaryDirectory(prefix='qr2git-swagger-') as directory:
-        target = Path(directory) / 'docs'
-        run(*swag, 'init', '-g', 'main.go', '--dir', str(ROOT), '--output', str(target), '--parseInternal', '--quiet')
-        for name in ['docs.go', 'swagger.json', 'swagger.yaml']:
-            if (target / name).read_bytes() != (ROOT / 'docs' / name).read_bytes():
-                raise ValueError('Swagger output is stale; run just gen-swagger')
+def check_contract():
+    run('python3', 'scripts/shared-contracts.py', '--check')
+    redocly = str(ROOT / 'contracts/node_modules/.bin/redocly')
+    config = str(ROOT / 'contracts/backend/redocly.yaml')
+    run(redocly, 'lint', '--config', config, 'backend@v1')
+    with tempfile.TemporaryDirectory(prefix='qr2git-contract-') as directory:
+        bundle = Path(directory) / 'openapi.yaml'
+        run(redocly, 'bundle', '--config', config, 'backend@v1',
+            '--component-renaming-conflicts-severity=error', '-o', str(bundle))
+        if bundle.read_bytes() != (ROOT / 'contracts/backend/dist/openapi.yaml').read_bytes():
+            raise ValueError('contract bundle is stale; run just contracts')
+
+        server = Path(directory) / 'api.gen.go'
+        oapi = shlex.split(subprocess.check_output(['go', 'tool', '-n', 'oapi-codegen'], cwd=ROOT, text=True))
+        generator = Path(directory) / 'oapi-codegen.yaml'
+        generator.write_text((ROOT / 'api/v1/oapi-codegen.yaml').read_text()
+                             .replace('output: api/v1/gen/api.gen.go', f'output: {server}'))
+        run(*oapi, '-config', str(generator), str(bundle))
+        if server.read_bytes() != (ROOT / 'api/v1/gen/api.gen.go').read_bytes():
+            raise ValueError('Go server boundary is stale; run just generate-backend')
+
+        client = Path(directory) / 'client'
+        script = (
+            "import('@hey-api/openapi-ts').then(m => m.createClient({"
+            f"input: {json.dumps(str(bundle))}, output: {json.dumps(str(client))}, logs: {{ level: 'silent' }},"
+            "plugins: ['@hey-api/client-fetch', '@pinia/colada']}))"
+        )
+        run('node', '-e', script, cwd=ROOT / 'web')
+        tracked = ROOT / 'web/app/generated/api'
+        want = sorted(p.relative_to(tracked) for p in tracked.rglob('*') if p.is_file())
+        got = sorted(p.relative_to(client) for p in client.rglob('*') if p.is_file())
+        if want != got or any((tracked / f).read_bytes() != (client / f).read_bytes() for f in want):
+            raise ValueError('TypeScript client is stale; run just generate-frontend')
 
 
 def check_theme():
@@ -75,7 +100,7 @@ if __name__ == '__main__':
     if not re.fullmatch(r"\d+\.\d+\.\d+", (ROOT / "VERSION").read_text().strip()):
         raise ValueError("VERSION must contain MAJOR.MINOR.PATCH")
     check_config()
-    check_swagger()
+    check_contract()
     check_theme()
     check_deploy()
-    print('Config and Swagger generation, shared theme provenance, and deploy settings are current')
+    print('Config, contract bundle, Go boundary, TypeScript client, shared fragments, theme provenance and deploy settings are current')

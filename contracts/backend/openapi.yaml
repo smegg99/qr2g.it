@@ -1,0 +1,87 @@
+# contracts/backend/openapi.yaml
+#
+# OpenAPI 3.1 within kin-openapi's subset: no type arrays, const, numeric
+# exclusiveMinimum or $ref siblings. Edit the split files; `just contracts` bundles dist/.
+openapi: 3.1.0
+info:
+  title: qr2g.it API
+  description: >
+    Permanent short links and QR codes for public GitHub repositories. One
+    repository has one canonical link that follows its GitHub identity through
+    renames and transfers. Generating a link does not establish ownership of the
+    repository or of its shared settings. Every error answers the same envelope:
+    branch on `code`, never on `message` (an i18n key) or the status alone.
+    Responses limited by a per-client budget answer 429 with `Retry-After` in
+    seconds. Requests authenticated with an automation token also receive
+    `X-RateLimit-Limit`, `X-RateLimit-Remaining` and `X-RateLimit-Reset`
+    (Unix seconds) for the token's daily quota.
+  version: 2.0.0
+  license:
+    name: MIT
+    url: https://github.com/smegg99/qr2g.it/blob/main/LICENSE
+servers:
+  - url: /api/v1
+    description: Every path below is relative to it.
+security: []
+tags:
+  - name: links
+    description: Create, reuse and read canonical short links.
+  - name: assets
+    description: QR codes, share cards and badges rendered without a browser.
+  - name: explore
+    description: >
+      Public discovery of repositories submitted to qr2g.it. Only repositories
+      that are publicly available, passed a successful owner policy check
+      without `noindex`, and are not removed appear here.
+  - name: statistics
+    description: >
+      Filtered redirects: successful final redirects to GitHub, excluding HEAD
+      requests, identifiable bots, link previews, prefetches and machine API
+      traffic. Filtering is imperfect. These are not unique people, QR scans or
+      GitHub-wide visits.
+  - name: policy
+    description: Owner opt-out markers read from the repository's default branch.
+  - name: contact
+    description: Reporting and removal requests.
+  - name: automation
+    description: Quota-limited access for coding agents and scripts.
+paths:
+  /links:
+    $ref: ./paths/links.yaml#/links
+  /links/batch:
+    $ref: ./paths/links.yaml#/batch
+  /links/lookup:
+    $ref: ./paths/links.yaml#/lookup
+  /links/{slug}:
+    $ref: ./paths/links.yaml#/link
+  /links/{slug}/resolve:
+    $ref: ./paths/links.yaml#/resolve
+  /links/{slug}/policy/refresh:
+    $ref: ./paths/policy.yaml#/refresh
+  /links/{slug}/asset:
+    $ref: ./paths/assets.yaml#/asset
+  /links/{slug}/stats:
+    $ref: ./paths/statistics.yaml#/stats
+  /repositories:
+    $ref: ./paths/explore.yaml#/repositories
+  /repositories/top:
+    $ref: ./paths/explore.yaml#/top
+  /coverage:
+    $ref: ./paths/statistics.yaml#/coverage
+  /repositories/{slug}:
+    $ref: ./paths/explore.yaml#/repository
+  /languages:
+    $ref: ./paths/explore.yaml#/languages
+  /contact/reveal:
+    $ref: ./paths/contact.yaml#/reveal
+  /automation/usage:
+    $ref: ./paths/automation.yaml#/usage
+components:
+  securitySchemes:
+    automationToken:
+      type: http
+      scheme: bearer
+      description: >
+        A revocable automation token issued by the operator. It replaces the
+        browser verification on creation and carries a daily request quota.
+        A claimed AI User-Agent is not authorization.

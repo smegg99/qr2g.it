@@ -1,0 +1,19 @@
+# Copied from s99ab by scripts/shared-contracts.py. Do not edit.
+# Run `just shared-contracts` after bumping s99ab.
+# contracts/schemas/pagination.yaml
+#
+# OpenAPI has no generics: apps compose PageBase with their own typed items
+# array through allOf (see ItemPage in contracts/probe.yaml).
+
+PageBase:
+  type: object
+  required: [total]
+  properties:
+    total:
+      type: integer
+      minimum: 0
+      description: >
+        Rows matching the filter, ignoring pagination. Drives the pager.
+        An endpoint that cannot produce this must not use PageBase - it needs
+        a different shape, not a guess.
+      examples: [128]

@@ -1,0 +1,190 @@
+# contracts/backend/schemas/link.yaml
+
+Link:
+  type: object
+  description: >
+    A canonical short link, in the shape `/{slug}+` has always answered.
+    Repository facts are present only while the repository is publicly
+    available and the link is not removed; otherwise the service keeps the
+    identity internally and publishes only the slug and state. Description and
+    language are also withheld while the owner or operator hides the
+    repository from discovery.
+  additionalProperties: false
+  required: [id, slug, url, state, createdAt, policy]
+  properties:
+    id:
+      type: integer
+      format: int64
+      minimum: 1
+    slug:
+      type: string
+      examples: ['2']
+    url:
+      type: string
+      description: Canonical short URL encoded in QR codes.
+      examples: ['https://qr2g.it/2']
+    state:
+      $ref: '#/LinkState'
+    stateReason:
+      type: string
+      description: Why the link no longer redirects, in English, for operators.
+    createdAt:
+      type: string
+      format: date-time
+      description: Start of the UTC day the link was first created; finer times are not published.
+    verifiedAt:
+      type: string
+      format: date-time
+      description: Last successful GitHub identity verification.
+    verifyAfter:
+      type: string
+      format: date-time
+      description: When the next verification is due.
+    initialFullName:
+      type: string
+      description: Owner/name when the link was created; differs after a rename or transfer.
+    currentFullName:
+      type: string
+      description: Current owner/name.
+    currentUrl:
+      type: string
+      description: Current GitHub destination.
+    githubNodeId:
+      type: string
+    githubDatabaseId:
+      type: integer
+      format: int64
+    description:
+      type: string
+      description: Repository description; absent when GitHub has none or discovery is hidden.
+    language:
+      type: string
+      description: Primary language GitHub reports; absent under the same conditions as description.
+    languages:
+      type: array
+      description: >
+        The largest languages by GitHub's byte count, largest first, at most six;
+        absent under the same conditions as description or before GitHub was asked.
+      items:
+        $ref: '#/LanguageShare'
+    archived:
+      type: boolean
+    stars:
+      type: integer
+      format: int64
+      minimum: 0
+      description: >
+        GitHub's star count at the last successful read; absent under the same
+        conditions as description or before it was first read.
+    policy:
+      $ref: '#/Policy'
+
+LinkState:
+  type: string
+  description: >
+    `active` redirects. `unavailable` means GitHub no longer shows the
+    repository publicly; deleted and private cannot be told apart. `private`
+    means GitHub reported it as private. `removed` means the operator removed
+    it after a request.
+  enum: [active, unavailable, private, removed]
+
+Policy:
+  type: object
+  description: >
+    Shared listing and analytics policy. Owners opt out with an empty
+    `.qr2git-noindex` or `.qr2git-noanalytics` file in the default branch root,
+    or a standalone `<!-- qr2git: noindex -->` or
+    `<!-- qr2git: noanalytics -->` README comment outside code. A failed check
+    keeps known restrictions.
+  additionalProperties: false
+  required: [listing, analytics, lastCheckFailed]
+  properties:
+    listing:
+      type: string
+      description: >
+        `listed` appears in Explore. `pending` waits for the first successful
+        check. `owner_noindex` follows the owner's marker. `removed` follows a
+        removal request. `unavailable` follows the repository state.
+      enum: [listed, pending, owner_noindex, removed, unavailable]
+    analytics:
+      type: string
+      description: >
+        `collecting` counts filtered redirects. `pending` waits for the first
+        check. `owner_noanalytics` stopped future collection; earlier
+        aggregates are not deleted by the marker.
+      enum: [collecting, pending, owner_noanalytics, removed, unavailable]
+    checkedAt:
+      type: string
+      format: date-time
+      description: Last successful policy check.
+    lastCheckFailed:
+      type: boolean
+      description: The most recent attempt failed; the previous result still applies.
+
+CreateLinkRequest:
+  type: object
+  additionalProperties: false
+  required: [url]
+  properties:
+    url:
+      type: string
+      maxLength: 512
+      description: Public GitHub repository URL, e.g. https://github.com/owner/name.
+    turnstileToken:
+      type: string
+      maxLength: 4096
+      description: Browser verification token. Not needed with an automation token.
+
+BatchRequest:
+  type: object
+  additionalProperties: false
+  required: [repositories]
+  properties:
+    repositories:
+      type: array
+      minItems: 1
+      maxItems: 25
+      items:
+        type: string
+        maxLength: 512
+        description: owner/name or a GitHub repository URL.
+
+BatchResult:
+  type: object
+  additionalProperties: false
+  required: [results]
+  properties:
+    results:
+      type: array
+      description: One entry per input, in input order.
+      items:
+        $ref: '#/BatchItem'
+
+BatchItem:
+  type: object
+  additionalProperties: false
+  required: [input, outcome]
+  properties:
+    input:
+      type: string
+    outcome:
+      type: string
+      enum: [created, existing, failed]
+    link:
+      $ref: '#/Link'
+    error:
+      $ref: ../../shared/schemas/error.yaml#/Error
+
+LanguageShare:
+  type: object
+  additionalProperties: false
+  required: [name, share]
+  properties:
+    name:
+      type: string
+    share:
+      type: number
+      format: float
+      minimum: 0
+      maximum: 1
+      description: Part of the repository's code, rounded to a thousandth.

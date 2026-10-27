@@ -1,0 +1,109 @@
+# contracts/backend/paths/explore.yaml
+
+repositories:
+  get:
+    tags: [explore]
+    operationId: listRepositories
+    summary: Search listed repositories
+    description: >
+      Searches owner, name and description of listed repositories submitted
+      to qr2g.it. It does not index GitHub.
+    parameters:
+      - $ref: ../../shared/parameters/pagination.yaml#/Page
+      - name: limit
+        in: query
+        description: Page size.
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 50
+          default: 24
+      - name: sort
+        in: query
+        description: >
+          `recent` newest first; `popular7` and `popular30` by filtered
+          redirects in the last 7 or 30 UTC days.
+        schema:
+          type: string
+          enum: [recent, popular7, popular30]
+          default: recent
+      - $ref: ../../shared/parameters/pagination.yaml#/Query
+      - name: language
+        in: query
+        schema:
+          type: string
+          maxLength: 60
+    responses:
+      '200':
+        description: A page of repositories.
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/explore.yaml#/RepositoryPage
+      '400':
+        $ref: ../responses/error.yaml#/BadRequest
+      '429':
+        $ref: ../responses/error.yaml#/TooManyRequests
+
+top:
+  get:
+    tags: [explore]
+    operationId: listTopRepositories
+    summary: The most visited listed repositories
+    description: >
+      Listed repositories that collect statistics, ranked by filtered
+      redirects in the last 30 UTC days. Repositories without a redirect in
+      that window are left out, so the list can be shorter than `limit`.
+    parameters:
+      - name: limit
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 10
+          default: 3
+    responses:
+      '200':
+        description: The ranked repositories, most visited first.
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/explore.yaml#/TopRepositoryList
+      '400':
+        $ref: ../responses/error.yaml#/BadRequest
+      '429':
+        $ref: ../responses/error.yaml#/TooManyRequests
+
+repository:
+  get:
+    tags: [explore]
+    operationId: getRepository
+    summary: Read a listed repository
+    parameters:
+      - $ref: ../parameters/path.yaml#/Slug
+    responses:
+      '200':
+        description: The listed repository.
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/explore.yaml#/RepositoryDetail
+      '404':
+        $ref: ../responses/error.yaml#/NotFound
+      '429':
+        $ref: ../responses/error.yaml#/TooManyRequests
+
+languages:
+  get:
+    tags: [explore]
+    operationId: listLanguages
+    summary: List languages of listed repositories
+    responses:
+      '200':
+        description: Languages with their listed repository counts, most common first.
+        content:
+          application/json:
+            schema:
+              $ref: ../schemas/explore.yaml#/LanguageList
+      '429':
+        $ref: ../responses/error.yaml#/TooManyRequests

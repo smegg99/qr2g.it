@@ -1,0 +1,8 @@
+# api/v1/oapi-codegen.yaml
+# Input is contracts/backend/dist/openapi.yaml, which just contracts bundles.
+package: gen
+output: api/v1/gen/api.gen.go
+generate:
+  models: true
+  gin-server: true
+  strict-server: true

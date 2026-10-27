@@ -1,0 +1,1199 @@
+openapi: 3.1.0
+info:
+  title: qr2g.it API
+  description: |
+    Permanent short links and QR codes for public GitHub repositories. One repository has one canonical link that follows its GitHub identity through renames and transfers. Generating a link does not establish ownership of the repository or of its shared settings. Every error answers the same envelope: branch on `code`, never on `message` (an i18n key) or the status alone. Responses limited by a per-client budget answer 429 with `Retry-After` in seconds. Requests authenticated with an automation token also receive `X-RateLimit-Limit`, `X-RateLimit-Remaining` and `X-RateLimit-Reset` (Unix seconds) for the token's daily quota.
+  version: 2.0.0
+  license:
+    name: MIT
+    url: https://github.com/smegg99/qr2g.it/blob/main/LICENSE
+servers:
+  - url: /api/v1
+    description: Every path below is relative to it.
+security: []
+tags:
+  - name: links
+    description: Create, reuse and read canonical short links.
+  - name: assets
+    description: QR codes, share cards and badges rendered without a browser.
+  - name: explore
+    description: |
+      Public discovery of repositories submitted to qr2g.it. Only repositories that are publicly available, passed a successful owner policy check without `noindex`, and are not removed appear here.
+  - name: statistics
+    description: |
+      Filtered redirects: successful final redirects to GitHub, excluding HEAD requests, identifiable bots, link previews, prefetches and machine API traffic. Filtering is imperfect. These are not unique people, QR scans or GitHub-wide visits.
+  - name: policy
+    description: Owner opt-out markers read from the repository's default branch.
+  - name: contact
+    description: Reporting and removal requests.
+  - name: automation
+    description: Quota-limited access for coding agents and scripts.
+paths:
+  /links:
+    post:
+      tags:
+        - links
+      operationId: createLink
+      summary: Create or reuse a short link
+      description: |
+        Verifies a public GitHub repository and returns its canonical link. 201 means this request created the link; 200 means the repository already had one. Repeating the request never creates a second link, so it is safe to retry. Browsers send a Turnstile token; automation sends an automation token instead.
+      security:
+        - {}
+        - automationToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateLinkRequest'
+      responses:
+        '200':
+          description: Existing link found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Link'
+        '201':
+          description: New link created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Link'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '410':
+          $ref: '#/components/responses/Gone'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+  /links/batch:
+    post:
+      tags:
+        - links
+        - automation
+      operationId: createLinks
+      summary: Create or reuse up to 25 links
+      description: |
+        Processes each repository independently and in order. One failure does not stop the rest; each entry carries its own outcome or error. Each entry counts once against the token's daily quota.
+      security:
+        - automationToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BatchRequest'
+      responses:
+        '200':
+          description: Per-entry results.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BatchResult'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /links/lookup:
+    get:
+      tags:
+        - links
+      operationId: lookupLink
+      summary: Read an existing link by repository
+      description: |
+        A pure read: it never creates a link and never calls GitHub. A repository renamed since the last verification may not be found by its new name until qr2g.it verifies it again.
+      parameters:
+        - name: repository
+          in: query
+          required: true
+          description: owner/name.
+          schema:
+            type: string
+            maxLength: 140
+      responses:
+        '200':
+          description: The canonical link.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Link'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /links/{slug}:
+    get:
+      tags:
+        - links
+      operationId: getLink
+      summary: Read link metadata
+      description: Stored state without a GitHub call. Also served at `/{slug}+`.
+      parameters:
+        - $ref: '#/components/parameters/Slug'
+      responses:
+        '200':
+          description: The link.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Link'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /links/{slug}/resolve:
+    get:
+      tags:
+        - links
+      operationId: resolveLink
+      summary: Resolve a link as JSON
+      description: |
+        Verifies a stale link against GitHub, like the redirect does, and answers its state without redirecting. Fails closed: a stale link is not advertised as active when verification fails. Not counted as a redirect.
+      parameters:
+        - $ref: '#/components/parameters/Slug'
+      responses:
+        '200':
+          description: Active link.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Link'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '410':
+          description: The link no longer redirects.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Link'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+  /links/{slug}/policy/refresh:
+    post:
+      tags:
+        - policy
+      operationId: refreshLinkPolicy
+      summary: Refresh repository settings
+      description: |
+        Re-reads availability and the owner's opt-out markers now. Concurrent requests share one check, and a link is checked at most once per cooldown; inside it the request answers 429 with `Retry-After`. A failed check keeps the previous restrictions and answers 503.
+      parameters:
+        - $ref: '#/components/parameters/Slug'
+      responses:
+        '200':
+          description: The link after the check.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Link'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '410':
+          $ref: '#/components/responses/Gone'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+  /links/{slug}/asset:
+    get:
+      tags:
+        - assets
+      operationId: renderLinkAsset
+      summary: Render a QR code, share card or badge
+      description: |
+        Renders the link with a website preset. The QR keeps a quiet zone of at least four modules and requires a contrast ratio of at least 4.5 between modules and tile; light modules on a dark tile are allowed. Text is drawn as vector outlines, so the file needs no fonts. A rendered preview does not prove scan reliability for every printer, screen or camera. Not counted as a redirect.
+      parameters:
+        - $ref: '#/components/parameters/Slug'
+        - name: preset
+          in: query
+          description: |
+            `qr` standalone code, `presentation` 16:9 slide card, `poster` 3:4 card with the description, `label` monochrome physical label, `badge` small README badge.
+          schema:
+            type: string
+            enum:
+              - qr
+              - presentation
+              - poster
+              - label
+              - badge
+            default: qr
+        - name: format
+          in: query
+          schema:
+            type: string
+            enum:
+              - svg
+              - png
+              - jpg
+            default: svg
+          description: JPG is always opaque, so `badge` and `transparent` reject it.
+        - name: theme
+          in: query
+          description: Card background; independent of the website's appearance.
+          schema:
+            type: string
+            enum:
+              - light
+              - dark
+            default: light
+        - name: fg
+          in: query
+          description: QR module colour, `#rrggbb`.
+          schema:
+            type: string
+            pattern: ^#[0-9a-fA-F]{6}$
+        - name: bg
+          in: query
+          description: QR tile colour, `#rrggbb`.
+          schema:
+            type: string
+            pattern: ^#[0-9a-fA-F]{6}$
+        - name: accent
+          in: query
+          description: Optional card accent, `#rrggbb`.
+          schema:
+            type: string
+            pattern: ^#[0-9a-fA-F]{6}$
+        - name: caption
+          in: query
+          description: Export-specific caption. Does not change repository metadata.
+          schema:
+            type: string
+            maxLength: 140
+        - name: ec
+          in: query
+          description: |
+            QR error correction level. Defaults to `H` with the logo and `M` without it. The logo needs `H`.
+          schema:
+            type: string
+            enum:
+              - L
+              - M
+              - Q
+              - H
+        - name: margin
+          in: query
+          description: Quiet zone in modules.
+          schema:
+            type: integer
+            minimum: 4
+            maximum: 16
+            default: 4
+        - name: radius
+          in: query
+          description: Tile corner radius as a percentage of the largest radius that cannot clip the symbol.
+          schema:
+            type: integer
+            minimum: 0
+            maximum: 100
+            default: 0
+        - name: size
+          in: query
+          description: |
+            Pixel width: `qr` 128-4000 (default 1024), `presentation` 960-3840 (default 1920), `poster` 600-3000 (default 1200). Ignored by `label` and `badge`.
+          schema:
+            type: integer
+            minimum: 128
+            maximum: 4000
+        - name: logo
+          in: query
+          description: |
+            Draw the qr2g.it fox in the centre of the code, in the QR colour, on modules cleared for it. Ignored by `badge`.
+          schema:
+            type: boolean
+            default: true
+        - name: transparent
+          in: query
+          description: Omit the tile background. `qr` preset with `svg` or `png` only.
+          schema:
+            type: boolean
+            default: false
+        - name: labelWidth
+          in: query
+          description: Label width in millimetres.
+          schema:
+            type: integer
+            minimum: 20
+            maximum: 200
+            default: 40
+        - name: labelHeight
+          in: query
+          description: Label height in millimetres.
+          schema:
+            type: integer
+            minimum: 20
+            maximum: 200
+            default: 50
+        - name: dpi
+          in: query
+          description: Label raster resolution. Printer scaling still affects the physical size.
+          schema:
+            type: integer
+            minimum: 150
+            maximum: 1200
+            default: 300
+        - name: download
+          in: query
+          description: Answer `Content-Disposition` attachment instead of inline.
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: |
+            The rendered file. `Content-Disposition` carries a filename such as `Goptivum-presentation.png`.
+          headers:
+            Content-Disposition:
+              schema:
+                type: string
+            Cache-Control:
+              description: Successful renders may be cached for an hour; errors are not cached.
+              schema:
+                type: string
+            X-Asset-Width:
+              description: Width in pixels.
+              schema:
+                type: integer
+            X-Asset-Height:
+              description: Height in pixels.
+              schema:
+                type: integer
+          content:
+            image/svg+xml:
+              schema:
+                type: string
+                format: binary
+            image/png:
+              schema:
+                type: string
+                format: binary
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '410':
+          $ref: '#/components/responses/Gone'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /links/{slug}/stats:
+    get:
+      tags:
+        - statistics
+      operationId: getLinkStats
+      summary: Read filtered redirect aggregates
+      description: |
+        Only for repositories eligible for public discovery. The canonical link is shared, so this is combined usage across everyone who shares it.
+      parameters:
+        - $ref: '#/components/parameters/Slug'
+      responses:
+        '200':
+          description: Aggregates.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LinkStats'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /repositories:
+    get:
+      tags:
+        - explore
+      operationId: listRepositories
+      summary: Search listed repositories
+      description: |
+        Searches owner, name and description of listed repositories submitted to qr2g.it. It does not index GitHub.
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - name: limit
+          in: query
+          description: Page size.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 24
+        - name: sort
+          in: query
+          description: |
+            `recent` newest first; `popular7` and `popular30` by filtered redirects in the last 7 or 30 UTC days.
+          schema:
+            type: string
+            enum:
+              - recent
+              - popular7
+              - popular30
+            default: recent
+        - $ref: '#/components/parameters/Query'
+        - name: language
+          in: query
+          schema:
+            type: string
+            maxLength: 60
+      responses:
+        '200':
+          description: A page of repositories.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RepositoryPage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /repositories/top:
+    get:
+      tags:
+        - explore
+      operationId: listTopRepositories
+      summary: The most visited listed repositories
+      description: |
+        Listed repositories that collect statistics, ranked by filtered redirects in the last 30 UTC days. Repositories without a redirect in that window are left out, so the list can be shorter than `limit`.
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 10
+            default: 3
+      responses:
+        '200':
+          description: The ranked repositories, most visited first.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TopRepositoryList'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /coverage:
+    get:
+      tags:
+        - statistics
+      operationId: getCoverage
+      summary: How many public GitHub repositories have a link
+      description: |
+        Counts links that currently redirect, next to GitHub's own count of public repositories including forks. GitHub's number comes from its search, which stops counting early on such a broad query, so it is a lower bound; it is refreshed at most every 12 hours and is absent while GitHub cannot be asked.
+      responses:
+        '200':
+          description: The current counts.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Coverage'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /repositories/{slug}:
+    get:
+      tags:
+        - explore
+      operationId: getRepository
+      summary: Read a listed repository
+      parameters:
+        - $ref: '#/components/parameters/Slug'
+      responses:
+        '200':
+          description: The listed repository.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RepositoryDetail'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /languages:
+    get:
+      tags:
+        - explore
+      operationId: listLanguages
+      summary: List languages of listed repositories
+      responses:
+        '200':
+          description: Languages with their listed repository counts, most common first.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LanguageList'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /contact/reveal:
+    post:
+      tags:
+        - contact
+      operationId: revealContact
+      summary: Reveal the contact address
+      description: |
+        A verified browser check receives the main address. A missing, failed or unverifiable check receives the catch-all address instead; that is not a judgement that the caller is a bot. Neither address appears in the site bundle or page metadata.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ContactRequest'
+      responses:
+        '200':
+          description: The address to use.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Contact'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+  /automation/usage:
+    get:
+      tags:
+        - automation
+      operationId: getAutomationUsage
+      summary: Read the token's quota
+      description: Does not count against the quota.
+      security:
+        - automationToken: []
+      responses:
+        '200':
+          description: Today's usage.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AutomationUsage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+components:
+  securitySchemes:
+    automationToken:
+      type: http
+      scheme: bearer
+      description: |
+        A revocable automation token issued by the operator. It replaces the browser verification on creation and carries a daily request quota. A claimed AI User-Agent is not authorization.
+  schemas:
+    CreateLinkRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - url
+      properties:
+        url:
+          type: string
+          maxLength: 512
+          description: Public GitHub repository URL, e.g. https://github.com/owner/name.
+        turnstileToken:
+          type: string
+          maxLength: 4096
+          description: Browser verification token. Not needed with an automation token.
+    LinkState:
+      type: string
+      description: |
+        `active` redirects. `unavailable` means GitHub no longer shows the repository publicly; deleted and private cannot be told apart. `private` means GitHub reported it as private. `removed` means the operator removed it after a request.
+      enum:
+        - active
+        - unavailable
+        - private
+        - removed
+    LanguageShare:
+      type: object
+      additionalProperties: false
+      required:
+        - name
+        - share
+      properties:
+        name:
+          type: string
+        share:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+          description: Part of the repository's code, rounded to a thousandth.
+    Policy:
+      type: object
+      description: |
+        Shared listing and analytics policy. Owners opt out with an empty `.qr2git-noindex` or `.qr2git-noanalytics` file in the default branch root, or a standalone `<!-- qr2git: noindex -->` or `<!-- qr2git: noanalytics -->` README comment outside code. A failed check keeps known restrictions.
+      additionalProperties: false
+      required:
+        - listing
+        - analytics
+        - lastCheckFailed
+      properties:
+        listing:
+          type: string
+          description: |
+            `listed` appears in Explore. `pending` waits for the first successful check. `owner_noindex` follows the owner's marker. `removed` follows a removal request. `unavailable` follows the repository state.
+          enum:
+            - listed
+            - pending
+            - owner_noindex
+            - removed
+            - unavailable
+        analytics:
+          type: string
+          description: |
+            `collecting` counts filtered redirects. `pending` waits for the first check. `owner_noanalytics` stopped future collection; earlier aggregates are not deleted by the marker.
+          enum:
+            - collecting
+            - pending
+            - owner_noanalytics
+            - removed
+            - unavailable
+        checkedAt:
+          type: string
+          format: date-time
+          description: Last successful policy check.
+        lastCheckFailed:
+          type: boolean
+          description: The most recent attempt failed; the previous result still applies.
+    Link:
+      type: object
+      description: |
+        A canonical short link, in the shape `/{slug}+` has always answered. Repository facts are present only while the repository is publicly available and the link is not removed; otherwise the service keeps the identity internally and publishes only the slug and state. Description and language are also withheld while the owner or operator hides the repository from discovery.
+      additionalProperties: false
+      required:
+        - id
+        - slug
+        - url
+        - state
+        - createdAt
+        - policy
+      properties:
+        id:
+          type: integer
+          format: int64
+          minimum: 1
+        slug:
+          type: string
+          examples:
+            - '2'
+        url:
+          type: string
+          description: Canonical short URL encoded in QR codes.
+          examples:
+            - https://qr2g.it/2
+        state:
+          $ref: '#/components/schemas/LinkState'
+        stateReason:
+          type: string
+          description: Why the link no longer redirects, in English, for operators.
+        createdAt:
+          type: string
+          format: date-time
+          description: Start of the UTC day the link was first created; finer times are not published.
+        verifiedAt:
+          type: string
+          format: date-time
+          description: Last successful GitHub identity verification.
+        verifyAfter:
+          type: string
+          format: date-time
+          description: When the next verification is due.
+        initialFullName:
+          type: string
+          description: Owner/name when the link was created; differs after a rename or transfer.
+        currentFullName:
+          type: string
+          description: Current owner/name.
+        currentUrl:
+          type: string
+          description: Current GitHub destination.
+        githubNodeId:
+          type: string
+        githubDatabaseId:
+          type: integer
+          format: int64
+        description:
+          type: string
+          description: Repository description; absent when GitHub has none or discovery is hidden.
+        language:
+          type: string
+          description: Primary language GitHub reports; absent under the same conditions as description.
+        languages:
+          type: array
+          description: |
+            The largest languages by GitHub's byte count, largest first, at most six; absent under the same conditions as description or before GitHub was asked.
+          items:
+            $ref: '#/components/schemas/LanguageShare'
+        archived:
+          type: boolean
+        stars:
+          type: integer
+          format: int64
+          minimum: 0
+          description: |
+            GitHub's star count at the last successful read; absent under the same conditions as description or before it was first read.
+        policy:
+          $ref: '#/components/schemas/Policy'
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      additionalProperties: false
+      properties:
+        code:
+          type: string
+          pattern: ^[a-z][a-z0-9_]*$
+          description: |
+            Stable machine-readable code. Clients branch on this, never on the message or the status. Never localised, never reworded.
+          examples:
+            - not_found
+            - conflict
+            - validation
+            - unauthorized
+            - internal
+        message:
+          type: string
+          description: |
+            i18n key the client resolves. Never English prose - the server does not know the caller's language.
+          examples:
+            - error.notFound
+            - session.nameTooShort
+        details:
+          type: object
+          description: |
+            Field-level detail, keyed by field path. Present on validation errors, absent otherwise. Values are codes, not sentences.
+          additionalProperties:
+            type: string
+          examples:
+            - name: too_short
+              email: invalid_format
+    BatchRequest:
+      type: object
+      additionalProperties: false
+      required:
+        - repositories
+      properties:
+        repositories:
+          type: array
+          minItems: 1
+          maxItems: 25
+          items:
+            type: string
+            maxLength: 512
+            description: owner/name or a GitHub repository URL.
+    BatchItem:
+      type: object
+      additionalProperties: false
+      required:
+        - input
+        - outcome
+      properties:
+        input:
+          type: string
+        outcome:
+          type: string
+          enum:
+            - created
+            - existing
+            - failed
+        link:
+          $ref: '#/components/schemas/Link'
+        error:
+          $ref: '#/components/schemas/Error'
+    BatchResult:
+      type: object
+      additionalProperties: false
+      required:
+        - results
+      properties:
+        results:
+          type: array
+          description: One entry per input, in input order.
+          items:
+            $ref: '#/components/schemas/BatchItem'
+    StatsDay:
+      type: object
+      additionalProperties: false
+      required:
+        - date
+        - redirects
+      properties:
+        date:
+          type: string
+          format: date
+        redirects:
+          type: integer
+          minimum: 0
+    StatsPause:
+      type: object
+      additionalProperties: false
+      required:
+        - from
+        - reason
+      properties:
+        from:
+          type: string
+          format: date
+        to:
+          type: string
+          format: date
+          description: Absent while the pause continues.
+        reason:
+          type: string
+          enum:
+            - owner_noanalytics
+    LinkStats:
+      type: object
+      description: |
+        Daily filtered-redirect aggregates over the last 30 UTC days. Days before `collectionStartedOn` are unknown, not zero. Collection pauses are listed.
+      additionalProperties: false
+      required:
+        - slug
+        - metric
+        - collectionStartedOn
+        - collecting
+        - total
+        - total7
+        - total30
+        - days
+        - pauses
+      properties:
+        slug:
+          type: string
+        metric:
+          type: string
+          enum:
+            - filtered_redirects
+        collectionStartedOn:
+          type: string
+          format: date
+        collecting:
+          type: boolean
+        total:
+          type: integer
+          minimum: 0
+          description: Filtered redirects since collection started.
+        lastRedirectAt:
+          type: string
+          format: date-time
+          description: Time of the latest filtered redirect; absent before the first one.
+        total7:
+          type: integer
+          minimum: 0
+        total30:
+          type: integer
+          minimum: 0
+        days:
+          type: array
+          description: Oldest first. Days without collection are omitted.
+          items:
+            $ref: '#/components/schemas/StatsDay'
+        pauses:
+          type: array
+          items:
+            $ref: '#/components/schemas/StatsPause'
+    PageBase:
+      type: object
+      required:
+        - total
+      properties:
+        total:
+          type: integer
+          minimum: 0
+          description: |
+            Rows matching the filter, ignoring pagination. Drives the pager. An endpoint that cannot produce this must not use PageBase - it needs a different shape, not a guess.
+          examples:
+            - 128
+    ExploreItem:
+      type: object
+      additionalProperties: false
+      required:
+        - slug
+        - url
+        - owner
+        - name
+        - fullName
+        - archived
+        - firstAddedOn
+      properties:
+        slug:
+          type: string
+        url:
+          type: string
+          description: Canonical short URL.
+        owner:
+          type: string
+        name:
+          type: string
+        fullName:
+          type: string
+        description:
+          type: string
+        language:
+          type: string
+        archived:
+          type: boolean
+        firstAddedOn:
+          type: string
+          format: date
+        redirects7:
+          type: integer
+          minimum: 0
+          description: Filtered redirects in the last 7 UTC days. Absent when collection is stopped.
+        redirects30:
+          type: integer
+          minimum: 0
+          description: Filtered redirects in the last 30 UTC days. Absent when collection is stopped.
+    RepositoryPage:
+      allOf:
+        - $ref: '#/components/schemas/PageBase'
+        - type: object
+          required:
+            - items
+          properties:
+            items:
+              type: array
+              items:
+                $ref: '#/components/schemas/ExploreItem'
+    TopRepository:
+      type: object
+      additionalProperties: false
+      required:
+        - slug
+        - url
+        - fullName
+        - total
+        - total30
+        - days
+      properties:
+        slug:
+          type: string
+        url:
+          type: string
+          description: Canonical short URL.
+        fullName:
+          type: string
+        description:
+          type: string
+        language:
+          type: string
+        total:
+          type: integer
+          minimum: 0
+          description: Filtered redirects since collection started.
+        total30:
+          type: integer
+          minimum: 0
+          description: Filtered redirects in the last 30 UTC days.
+        lastRedirectAt:
+          type: string
+          format: date-time
+          description: Time of the latest filtered redirect. Absent before the first one is recorded.
+        days:
+          type: array
+          description: The last 30 UTC days, oldest first. Days without collection are omitted.
+          items:
+            $ref: '#/components/schemas/StatsDay'
+    TopRepositoryList:
+      type: object
+      additionalProperties: false
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/TopRepository'
+    Coverage:
+      type: object
+      additionalProperties: false
+      required:
+        - mapped
+      properties:
+        mapped:
+          type: integer
+          minimum: 0
+          description: Links that currently redirect to a public repository.
+        publicRepositories:
+          type: integer
+          format: int64
+          minimum: 1
+          description: GitHub's search count of public repositories, forks included; a lower bound.
+        countedAt:
+          type: string
+          format: date-time
+          description: When GitHub was last asked.
+    RepositoryDetail:
+      type: object
+      additionalProperties: false
+      required:
+        - item
+        - initialFullName
+        - analytics
+      properties:
+        item:
+          $ref: '#/components/schemas/ExploreItem'
+        initialFullName:
+          type: string
+        verifiedAt:
+          type: string
+          format: date-time
+        analytics:
+          type: string
+          enum:
+            - collecting
+            - owner_noanalytics
+    LanguageCount:
+      type: object
+      additionalProperties: false
+      required:
+        - name
+        - count
+      properties:
+        name:
+          type: string
+        count:
+          type: integer
+          minimum: 1
+    LanguageList:
+      type: object
+      additionalProperties: false
+      required:
+        - items
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/LanguageCount'
+    ContactRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        turnstileToken:
+          type: string
+          maxLength: 4096
+          description: Browser verification token; empty when the check could not run.
+    Contact:
+      type: object
+      additionalProperties: false
+      required:
+        - email
+      properties:
+        email:
+          type: string
+          description: The address this request may use. Never cache it.
+    AutomationUsage:
+      type: object
+      additionalProperties: false
+      required:
+        - name
+        - dailyQuota
+        - usedToday
+        - resetsAt
+      properties:
+        name:
+          type: string
+        dailyQuota:
+          type: integer
+          minimum: 1
+        usedToday:
+          type: integer
+          minimum: 0
+        resetsAt:
+          type: string
+          format: date-time
+          description: Start of the next UTC day.
+  responses:
+    BadRequest:
+      description: |
+        The request could not be used: `invalid_body` (JSON that does not parse or has unknown fields), `invalid_url` (not a public GitHub repository URL), `invalid_repository` (not an owner/name pair) or `invalid_design` (an asset option out of range; `details` maps the option to a code).
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: |
+        `token_required` when the operation needs an automation token, or `token_invalid` when the presented token is unknown or revoked.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Forbidden:
+      description: |
+        `repo_private` for a private repository, `turnstile_required` when no browser verification token was sent, or `turnstile_failed` when verification rejected it. A failed check does not classify the caller as a bot; retry from a browser or use an automation token.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    NotFound:
+      description: |
+        `not_found` for an unknown slug, `link_not_found` when a repository has no qr2g.it link yet, `repo_not_found` when GitHub does not show the repository publicly, or `not_listed` when the repository is not eligible for public discovery or statistics.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Gone:
+      description: |
+        `link_unavailable`: the repository is no longer publicly available or the link was removed. The slug is never reused; a repository that becomes public again recovers the same link.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    TooManyRequests:
+      description: |
+        `rate_limited` for a per-client budget or a refresh cooldown, or `quota_exceeded` for an automation token's daily quota. Wait for `Retry-After` seconds before retrying.
+      headers:
+        Retry-After:
+          description: Seconds to wait before retrying.
+          schema:
+            type: integer
+            minimum: 1
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Unavailable:
+      description: |
+        A dependency failed and the request can be retried with backoff: `github_unavailable`, `github_rate_limited`, `verification_failed`, `turnstile_unavailable` or `contact_unavailable`.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  parameters:
+    Slug:
+      name: slug
+      in: path
+      required: true
+      description: Uppercase base36 slug of the link, e.g. `2` or `AB12`.
+      schema:
+        type: string
+        pattern: ^[1-9A-Z][0-9A-Z]{0,11}$
+        examples:
+          - '2'
+    Page:
+      name: page
+      in: query
+      required: false
+      description: 1-indexed. Absent means 1.
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    Query:
+      name: q
+      in: query
+      required: false
+      description: |
+        Free-text search. The endpoint decides which fields it covers and says so in its own description.
+      schema:
+        type: string

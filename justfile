@@ -10,6 +10,7 @@ default:
 
 # Install frontend and Go dependencies.
 install:
+    pnpm --dir contracts install --frozen-lockfile
     pnpm --dir web install --frozen-lockfile
     go mod download
     go -C tools/locales mod download
@@ -21,12 +22,12 @@ check: check-fmt vet test test-web lint typecheck check-locales check-generated 
 check-fmt:
     #!/usr/bin/env bash
     set -euo pipefail
-    unformatted="$(gofmt -l main.go api common core internal schema docs)"
+    unformatted="$(gofmt -l main.go api cmd common contracts core internal schema)"
     if [[ -n "$unformatted" ]]; then printf '%s\n' "$unformatted" >&2; exit 1; fi
 
 # Format Go and frontend source.
 fmt:
-    gofmt -w main.go api common core internal schema docs
+    gofmt -w main.go api cmd common contracts core internal schema
     pnpm --dir web exec eslint . --fix
 
 # Check Go source statically.
@@ -66,9 +67,34 @@ check-locales:
 gen-types:
     bash scripts/gen-types.sh
 
-# Check generated config, the shared package, and deployment settings.
+# Check generated config, contract, clients, shared packages, and deployment settings.
 check-generated:
     python3 scripts/check-generated.py
+
+# Copy the shared OpenAPI fragments from the pinned s99ab module.
+shared-contracts:
+    python3 scripts/shared-contracts.py
+
+# Refresh the language colours from the pinned GitHub Linguist release (needs network).
+language-colors:
+    python3 scripts/language-colors.py
+
+# Lint the authored contract tree and bundle it for the generators.
+contracts:
+    python3 scripts/shared-contracts.py --check
+    ./contracts/node_modules/.bin/redocly lint --config contracts/backend/redocly.yaml backend@v1
+    ./contracts/node_modules/.bin/redocly bundle --config contracts/backend/redocly.yaml backend@v1 --component-renaming-conflicts-severity=error -o contracts/backend/dist/openapi.yaml
+
+# Generate the Go server boundary from the bundled contract.
+generate-backend: contracts
+    go tool oapi-codegen -config api/v1/oapi-codegen.yaml contracts/backend/dist/openapi.yaml
+
+# Generate the TypeScript client and Pinia Colada options from the bundled contract.
+generate-frontend: contracts
+    pnpm --dir web generate:api
+
+# Regenerate every owned output from its canonical input.
+generate: locales gen-types generate-backend generate-frontend
 
 # Build the static site and embed it in the Go binary.
 build: build-web build-api
@@ -77,6 +103,7 @@ build: build-web build-api
 build-web:
     pnpm --dir web build
     mkdir -p internal/frontend/dist
+    find internal/frontend/dist -mindepth 1 -maxdepth 1 ! -name placeholder.txt -exec rm -rf -- {} +
     cp -a web/.output/public/. internal/frontend/dist/
 
 # Build the Go backend with the currently embedded frontend.
@@ -99,7 +126,7 @@ dev: build-api
     trap cleanup EXIT
     trap 'exit 130' INT
     trap 'exit 143' TERM
-    CONFIG_PATH=config.json.dev setsid ./bin/{{app_name}} &
+    CONFIG_PATH=config.json.dev setsid ./bin/{{app_name}} serve &
     api_pid=$!
     setsid pnpm --dir web dev &
     web_pid=$!
@@ -107,11 +134,11 @@ dev: build-api
 
 # Run only the backend with the production-oriented local config.
 run:
-    go run .
+    go run . serve
 
 # Run only the backend with development settings.
 run-dev:
-    CONFIG_PATH=config.json.dev go run .
+    CONFIG_PATH=config.json.dev go run . serve
 
 # Package a portable Linux release.
 release: build-web
@@ -136,11 +163,7 @@ db-download destination="data/qr2git-production.sqlite" host="ovh":
 
 # Apply migrations by starting the backend.
 migrate:
-    go run .
-
-# Regenerate the existing Swagger reference from Go annotations.
-gen-swagger:
-    go tool swag init -g main.go --output docs --parseInternal
+    go run . serve
 
 # Resolve the Go module graph.
 tidy:
