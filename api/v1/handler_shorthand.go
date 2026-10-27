@@ -1,4 +1,4 @@
-// api/handler_shorthand.go
+// api/v1/handler_shorthand.go
 
 package api
 
@@ -8,9 +8,11 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/smegg99/s99ab/api/apierr"
 
 	"smegg.me/qr2g.it/common/logger"
 	"smegg.me/qr2g.it/core/githuburl"
+	"smegg.me/qr2g.it/core/render"
 	"smegg.me/qr2g.it/core/repositories"
 	"smegg.me/qr2g.it/core/slug"
 	"smegg.me/qr2g.it/core/turnstile"
@@ -27,7 +29,7 @@ var cliUserAgentPrefixes = []string{
 	"PowerShell/", "WindowsPowerShell/",
 }
 
-// handleShorthand implements GET /:owner/:repo. Resolves an existing link
+// handleShorthand implements GET /:owner/:repo; CLI clients may add ?qr for a terminal QR code. Resolves an existing link
 // or creates a new one from a fresh GitHub lookup. Browsers get a 302 to
 // /:SLUG; CLI clients (curl, wget, ...) get the public short URL as
 // plain text so `curl qr2g.it/owner/repo` prints the link directly. The
@@ -44,35 +46,40 @@ func (s *Server) handleShorthand(c *gin.Context, owner, repo string) {
 	}
 
 	// Cheap path: known by current_full_name → straight respond.
-	if link, err := repositories.GetLinkRepository().
-		GetByCurrentFullName(c.Request.Context(), repoRef.FullName()); err == nil {
+	ctx := c.Request.Context()
+	if link, err := s.Links.GetByCurrentFullName(ctx, repoRef.FullName()); err == nil {
 		s.respondShorthand(c, link.ID, wantsText)
 		return
 	} else if !errors.Is(err, repositories.ErrNotFound) {
 		logger.Error().Err(err).Msg("shorthand: get by full name failed")
-		writeJSONError(c, http.StatusInternalServerError, "internal", "internal server error")
+		respond(c, failWrap(err, apierr.Internal))
 		return
 	}
 
-	// Cold path requires GitHub lookup. Apply create-class limits.
-	if !s.shorthandBucket.Allow(ip) || !s.shorthandHourly.Allow(ip) {
-		writeJSONError(c, http.StatusTooManyRequests, "rate_limited", "shorthand create limit reached")
+	// Cold path requires GitHub lookup and may create a link. Apply create-class limits.
+	if ok, after := s.shorthandBucket.Allow(ip); !ok {
+		respond(c, limited(kindRateLimited, after))
+		return
+	}
+	if ok, after := s.shorthandHourly.Allow(ip); !ok {
+		respond(c, limited(kindRateLimited, after))
 		return
 	}
 
-	if s.requireShorthandTurnstile && turnstile.Get().IsEnabled() {
+	if s.requireShorthandTurnstile {
 		token := c.Query("cf-turnstile-response")
 		if token == "" {
 			token = c.GetHeader("X-Turnstile-Token")
 		}
-		if err := s.verifyTurnstile(c, token, ip); err != nil {
+		if err := s.verifyTurnstile(ctx, token, ip, turnstile.ActionCreateLink); err != nil {
+			respond(c, err)
 			return
 		}
 	}
 
-	link, _, err := s.lookupAndStore(c.Request.Context(), repoRef)
+	link, _, err := s.lookupAndStore(ctx, repoRef)
 	if err != nil {
-		s.respondLookupError(c, err)
+		respond(c, err)
 		return
 	}
 	s.respondShorthand(c, link.ID, wantsText)
@@ -86,12 +93,23 @@ func (s *Server) respondShorthand(c *gin.Context, id int64, wantsText bool) {
 	sl, err := slug.Encode(id)
 	if err != nil {
 		logger.Error().Err(err).Int64("id", id).Msg("encode slug failed")
-		writeJSONError(c, http.StatusInternalServerError, "internal", "internal server error")
+		respond(c, failWrap(err, apierr.Internal))
 		return
 	}
 	c.Writer.Header().Set("Cache-Control", "no-store, private")
 	c.Writer.Header().Set("X-Robots-Tag", "noindex, nofollow")
-	c.String(http.StatusOK, "%s\n", s.publicBaseURL+"/"+sl)
+	// ?qr draws the code above the link; ?qr=invert is for terminals with a light background.
+	mode, wantsQR := c.GetQuery("qr")
+	if !wantsQR {
+		c.String(http.StatusOK, "%s\n", s.publicBaseURL+"/"+sl)
+		return
+	}
+	code, err := render.Terminal(s.canonicalShortURL(sl), mode == "invert")
+	if err != nil {
+		respond(c, failWrap(err, apierr.Internal))
+		return
+	}
+	c.String(http.StatusOK, "%s\n%s\n", code, s.publicBaseURL+"/"+sl)
 }
 
 // wantsPlainText returns true when the client is a CLI tool or has explicitly

@@ -1,15 +1,13 @@
-// api/handler_redirect.go
+// api/v1/handler_redirect.go
 
 package api
 
 import (
-	"errors"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 
 	"smegg.me/qr2g.it/common/logger"
-	"smegg.me/qr2g.it/core/repositories"
 	"smegg.me/qr2g.it/core/slug"
 )
 
@@ -17,89 +15,78 @@ import (
 // redirecting; never redirects after verification failure.
 func (s *Server) handleSlugRedirect(c *gin.Context, raw string) {
 	ip := getString(c, clientIPKey)
-
-	id, err := slug.Decode(raw)
-	if err != nil {
+	if _, err := slug.Decode(raw); err != nil {
 		s.missBucket.Allow(ip)
-		c.AbortWithStatus(http.StatusNotFound)
+		s.serveMissing(c, http.StatusNotFound)
 		return
 	}
-
-	if !s.resolveBucket.Allow(ip) {
-		writeJSONError(c, http.StatusTooManyRequests, "rate_limited", "too many requests")
-		c.Abort()
+	if ok, after := s.resolveBucket.Allow(ip); !ok {
+		respond(c, limited(kindRateLimited, after))
 		return
 	}
-
-	link, err := repositories.GetLinkRepository().GetByID(c.Request.Context(), id)
-	if errors.Is(err, repositories.ErrNotFound) {
-		s.missBucket.Allow(ip)
-		c.AbortWithStatus(http.StatusNotFound)
-		return
-	}
+	ctx := c.Request.Context()
+	link, err := s.loadLink(ctx, raw)
 	if err != nil {
-		logger.Error().Err(err).Int64("link_id", id).Msg("redirect: get link failed")
-		writeJSONError(c, http.StatusInternalServerError, "internal", "internal server error")
+		s.serveMissing(c, http.StatusNotFound)
 		return
 	}
-
-	resolved, status, vErr := s.resolveOrVerify(c.Request.Context(), link)
-	if vErr != nil {
-		writeJSONError(c, http.StatusServiceUnavailable, "verification_failed",
-			"could not verify github repository identity, try again shortly")
+	resolved, status, err := s.resolveOrVerify(ctx, link)
+	if err != nil {
+		respond(c, failWrap(err, kindVerificationFailed))
 		return
 	}
-
 	if status == http.StatusGone {
-		c.JSON(http.StatusGone, gin.H{
-			"error":       "tombstoned",
-			"slug":        raw,
-			"state":       string(resolved.State),
-			"stateReason": derefString(resolved.StateReason),
-			"message":     "this qr2g.it link is no longer active",
-		})
+		s.serveMissing(c, http.StatusGone)
 		return
 	}
-
+	if resolved.Collects() && countableRedirect(c) {
+		s.Recorder.Record(resolved.ID)
+	}
 	writeRedirect(c, resolved.CurrentURL)
+}
+
+// serveMissing answers browsers with the site, which explains the state, and other clients with the envelope.
+func (s *Server) serveMissing(c *gin.Context, status int) {
+	if acceptsHTML(c) && s.serveShell(c, status, pageMeta{NoIndex: true}) {
+		return
+	}
+	kind := kindNotFound
+	if status == http.StatusGone {
+		kind = kindLinkUnavailable
+	}
+	respond(c, fail(kind))
 }
 
 // handleInfoPage implements GET /:SLUG+. Returns JSON metadata without
 // verification or redirect.
 func (s *Server) handleInfoPage(c *gin.Context, raw string) {
-	ip := getString(c, clientIPKey)
-	if !s.resolveBucket.Allow(ip) {
-		writeJSONError(c, http.StatusTooManyRequests, "rate_limited", "too many requests")
+	if ok, after := s.resolveBucket.Allow(getString(c, clientIPKey)); !ok {
+		respond(c, limited(kindRateLimited, after))
 		return
 	}
-
-	id, err := slug.Decode(raw)
+	link, err := s.loadLink(c.Request.Context(), raw)
 	if err != nil {
-		s.missBucket.Allow(ip)
-		writeJSONError(c, http.StatusNotFound, "not_found", "no such link")
+		respond(c, err)
 		return
 	}
-
-	link, err := repositories.GetLinkRepository().GetByID(c.Request.Context(), id)
-	if errors.Is(err, repositories.ErrNotFound) {
-		s.missBucket.Allow(ip)
-		writeJSONError(c, http.StatusNotFound, "not_found", "no such link")
-		return
-	}
-	if err != nil {
-		logger.Error().Err(err).Int64("link_id", id).Msg("info: get link failed")
-		writeJSONError(c, http.StatusInternalServerError, "internal", "internal server error")
-		return
-	}
-	c.JSON(http.StatusOK, s.buildLinkResponse(link))
+	c.JSON(http.StatusOK, s.wireLink(link))
 }
 
 func (s *Server) redirectToSlug(c *gin.Context, id int64) {
 	sl, err := slug.Encode(id)
 	if err != nil {
 		logger.Error().Err(err).Int64("id", id).Msg("encode slug failed")
-		writeJSONError(c, http.StatusInternalServerError, "internal", "internal server error")
+		respond(c, err)
 		return
 	}
 	writeRedirect(c, s.publicBaseURL+"/"+sl)
+}
+
+func writeRedirect(c *gin.Context, location string) {
+	c.Writer.Header().Set("Location", location)
+	c.Writer.Header().Set("Cache-Control", "no-store, private")
+	c.Writer.Header().Set("Pragma", "no-cache")
+	c.Writer.Header().Set("X-Robots-Tag", "noindex, nofollow")
+	c.Writer.Header().Set("Referrer-Policy", "no-referrer-when-downgrade")
+	c.Writer.WriteHeader(http.StatusFound)
 }

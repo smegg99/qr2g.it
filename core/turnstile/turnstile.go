@@ -22,7 +22,6 @@ import (
 type Verifier struct {
 	secretKey        string
 	siteverifyURL    string
-	expectedAction   string
 	expectedHostname string
 	enabled          bool
 	requestTimeout   time.Duration
@@ -47,7 +46,6 @@ func Initialize() error {
 		instance = &Verifier{
 			secretKey:        cfg.SecretKey,
 			siteverifyURL:    cfg.SiteverifyURL,
-			expectedAction:   strings.TrimSpace(cfg.ExpectedAction),
 			expectedHostname: strings.TrimSpace(cfg.ExpectedHostname),
 			enabled:          cfg.Enabled,
 			requestTimeout:   timeout,
@@ -97,9 +95,15 @@ type siteverifyResponse struct {
 	} `json:"metadata"`
 }
 
-// Verify validates token (and optionally remote IP). On success returns nil.
+// Actions bind a token to the widget that produced it.
+const (
+	ActionCreateLink = "create_link"
+	ActionContact    = "contact"
+)
+
+// Verify validates token for action (and optionally remote IP). On success returns nil.
 // On any non-success returns ErrVerifyFailed (with detail) or ErrTransientVerify.
-func (v *Verifier) Verify(ctx context.Context, token, remoteIP string) error {
+func (v *Verifier) Verify(ctx context.Context, token, remoteIP, action string) error {
 	if v == nil || !v.enabled {
 		return ErrDisabled
 	}
@@ -146,7 +150,7 @@ func (v *Verifier) Verify(ctx context.Context, token, remoteIP string) error {
 	if v.isTestingValidation(out) {
 		return nil
 	}
-	if v.expectedAction != "" && out.Action != v.expectedAction {
+	if out.Action != action {
 		return fmt.Errorf("%w: action mismatch", ErrVerifyFailed)
 	}
 	if v.expectedHostname != "" && !strings.EqualFold(out.Hostname, v.expectedHostname) {

@@ -1,8 +1,9 @@
-// api/middleware.go
+// api/v1/middleware.go
 
 package api
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/hex"
 	"net"
@@ -11,10 +12,19 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/smegg99/s99ab/api/apierr"
 
 	"smegg.me/qr2g.it/common/logger"
 	"smegg.me/qr2g.it/common/ratelimit"
 )
+
+type clientIPContextKey struct{}
+
+// clientIPFrom returns the client IP the request middleware resolved.
+func clientIPFrom(ctx context.Context) string {
+	ip, _ := ctx.Value(clientIPContextKey{}).(string)
+	return ip
+}
 
 const (
 	requestIDHeader = "X-Request-ID"
@@ -28,8 +38,10 @@ func (s *Server) requestIDMiddleware() gin.HandlerFunc {
 		if id == "" {
 			id = newRequestID()
 		}
+		ip := s.extractClientIP(c)
 		c.Set(requestIDKey, id)
-		c.Set(clientIPKey, s.extractClientIP(c))
+		c.Set(clientIPKey, ip)
+		c.Request = c.Request.WithContext(context.WithValue(c.Request.Context(), clientIPContextKey{}, ip))
 		c.Writer.Header().Set(requestIDHeader, id)
 		c.Next()
 	}
@@ -41,7 +53,7 @@ func (s *Server) recoveryMiddleware() gin.HandlerFunc {
 			Interface("panic", err).
 			Str("path", c.Request.URL.Path).
 			Msg("panic recovered")
-		writeJSONError(c, http.StatusInternalServerError, "internal", "internal server error")
+		apierr.Respond(c, fail(apierr.Internal))
 	})
 }
 
@@ -72,13 +84,17 @@ func (s *Server) bodyLimitMiddleware(maxBytes int64) gin.HandlerFunc {
 	}
 }
 
+// rateLimitMiddleware applies a per-IP budget; automation tokens have their own quota instead.
 func (s *Server) rateLimitMiddleware(bucket *ratelimit.Bucket, label string) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		if _, ok := tokenFrom(c.Request.Context()); ok {
+			c.Next()
+			return
+		}
 		ip := getString(c, clientIPKey)
-		if !bucket.Allow(ip) {
+		if ok, after := bucket.Allow(ip); !ok {
 			logger.Debug().Str("limiter", label).Str("ip", ip).Msg("rate limited")
-			writeJSONError(c, http.StatusTooManyRequests, "rate_limited", "too many requests")
-			c.Abort()
+			respond(c, limited(kindRateLimited, after))
 			return
 		}
 		c.Next()

@@ -36,7 +36,6 @@ func verifierWithResponse(t *testing.T, secret, response string) *Verifier {
 	return &Verifier{
 		secretKey:        secret,
 		siteverifyURL:    srv.URL,
-		expectedAction:   "create_link",
 		expectedHostname: "qr2g.it",
 		enabled:          true,
 		requestTimeout:   time.Second,
@@ -52,7 +51,7 @@ func TestVerifyAllowsCloudflareTestingSecretDummyResponse(t *testing.T) {
 		"error-codes": []
 	}`)
 
-	if err := v.Verify(context.Background(), "XXXX.DUMMY.TOKEN.XXXX", "127.0.0.1"); err != nil {
+	if err := v.Verify(context.Background(), "XXXX.DUMMY.TOKEN.XXXX", "127.0.0.1", ActionCreateLink); err != nil {
 		t.Fatalf("Verify() error = %v", err)
 	}
 }
@@ -66,7 +65,7 @@ func TestVerifyAllowsTestingMetadataDummyResponse(t *testing.T) {
 		"metadata": { "result_with_testing_key": true }
 	}`)
 
-	if err := v.Verify(context.Background(), "XXXX.DUMMY.TOKEN.XXXX", "127.0.0.1"); err != nil {
+	if err := v.Verify(context.Background(), "XXXX.DUMMY.TOKEN.XXXX", "127.0.0.1", ActionCreateLink); err != nil {
 		t.Fatalf("Verify() error = %v", err)
 	}
 }
@@ -80,7 +79,7 @@ func TestVerifyRejectsStrictMismatchForRealSecret(t *testing.T) {
 		"error-codes": []
 	}`)
 
-	err := v.Verify(context.Background(), "real-token", "127.0.0.1")
+	err := v.Verify(context.Background(), "real-token", "127.0.0.1", ActionCreateLink)
 	if !errors.Is(err, ErrVerifyFailed) {
 		t.Fatalf("Verify() error = %v, want %v", err, ErrVerifyFailed)
 	}

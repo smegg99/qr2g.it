@@ -43,11 +43,11 @@ func NewBucket(rps float64, burst int, idleTTL time.Duration) *Bucket {
 	}
 }
 
-// Allow consumes one token if available. Returns false if the caller
-// is over budget for key.
-func (b *Bucket) Allow(key string) bool {
+// Allow consumes one token if available. When the caller is over budget for
+// key it returns false and how long until a token is available.
+func (b *Bucket) Allow(key string) (bool, time.Duration) {
 	if b == nil {
-		return true
+		return true, 0
 	}
 	b.mu.Lock()
 	defer b.mu.Unlock()
@@ -57,8 +57,14 @@ func (b *Bucket) Allow(key string) bool {
 		e = &entry{limiter: rate.NewLimiter(b.rate, b.burst)}
 		b.entries[key] = e
 	}
-	e.lastSeen = time.Now()
-	return e.limiter.Allow()
+	now := time.Now()
+	e.lastSeen = now
+	r := e.limiter.ReserveN(now, 1)
+	if delay := r.DelayFrom(now); delay > 0 {
+		r.CancelAt(now)
+		return false, delay
+	}
+	return true, 0
 }
 
 // Reset clears the bucket for testing.
@@ -118,11 +124,11 @@ func NewDailyCounter(limit int) *DailyCounter {
 	}
 }
 
-// Allow increments the per-day count for key and returns false if it would
-// exceed the limit.
-func (d *DailyCounter) Allow(key string) bool {
+// Allow increments the per-day count for key. Over the limit it returns false
+// and the time until the next UTC day.
+func (d *DailyCounter) Allow(key string) (bool, time.Duration) {
 	if d == nil || d.limit <= 0 {
-		return true
+		return true, 0
 	}
 	now := time.Now().UTC()
 	day := now.Year()*10000 + int(now.Month())*100 + now.Day()
@@ -134,10 +140,11 @@ func (d *DailyCounter) Allow(key string) bool {
 		d.counters = make(map[string]int)
 	}
 	if d.counters[key] >= d.limit {
-		return false
+		y, m, dd := now.Date()
+		return false, time.Date(y, m, dd+1, 0, 0, 0, 0, time.UTC).Sub(now)
 	}
 	d.counters[key]++
-	return true
+	return true, 0
 }
 
 // HourlyCounter is the same idea but bucketed per hour, used for the
@@ -158,12 +165,14 @@ func NewHourlyCounter(limit int) *HourlyCounter {
 	}
 }
 
-// Allow increments the per-hour count for key.
-func (h *HourlyCounter) Allow(key string) bool {
+// Allow increments the per-hour count for key. Over the limit it returns
+// false and the time until the next hour.
+func (h *HourlyCounter) Allow(key string) (bool, time.Duration) {
 	if h == nil || h.limit <= 0 {
-		return true
+		return true, 0
 	}
-	hour := time.Now().UTC().Unix() / 3600
+	now := time.Now().UTC()
+	hour := now.Unix() / 3600
 
 	h.mu.Lock()
 	defer h.mu.Unlock()
@@ -172,8 +181,8 @@ func (h *HourlyCounter) Allow(key string) bool {
 		h.counters = make(map[string]int)
 	}
 	if h.counters[key] >= h.limit {
-		return false
+		return false, time.Unix((hour+1)*3600, 0).Sub(now)
 	}
 	h.counters[key]++
-	return true
+	return true, 0
 }

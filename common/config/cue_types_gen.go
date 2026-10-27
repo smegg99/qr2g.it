@@ -13,6 +13,12 @@ type Config struct {
 
 	Verifier VerifierConfig `json:"verifier"`
 
+	Policy PolicyConfig `json:"policy"`
+
+	Statistics StatisticsConfig `json:"statistics"`
+
+	Contact ContactConfig `json:"contact"`
+
 	Ratelimit RateLimitConfig `json:"ratelimit"`
 
 	Logger LoggerConfig `json:"logger"`
@@ -60,6 +66,12 @@ type GithubConfig struct {
 	RESTBaseURL string `json:"rest_base_url"`
 
 	RequestTimeoutSeconds int64 `json:"request_timeout_seconds"`
+
+	// Optional token for public-data reads; anonymous reads have a small hourly allowance.
+	Token string `json:"token"`
+
+	// Background checks pause while GitHub reports fewer remaining requests than this.
+	BackgroundReserve int64 `json:"background_reserve"`
 }
 
 type TurnstileConfig struct {
@@ -68,8 +80,6 @@ type TurnstileConfig struct {
 	SiteKey string `json:"site_key"`
 
 	SiteverifyURL string `json:"siteverify_url"`
-
-	ExpectedAction string `json:"expected_action"`
 
 	ExpectedHostname string `json:"expected_hostname"`
 
@@ -100,6 +110,30 @@ type VerifierConfig struct {
 	RequestTimeoutSeconds int64 `json:"request_timeout_seconds"`
 }
 
+type PolicyConfig struct {
+	Enabled bool `json:"enabled"`
+
+	IntervalSeconds int64 `json:"interval_seconds"`
+
+	BatchSize int64 `json:"batch_size"`
+
+	FreshTTLSeconds int64 `json:"fresh_ttl_seconds"`
+
+	FailureBackoffSeconds int64 `json:"failure_backoff_seconds"`
+
+	RefreshCooldownSeconds int64 `json:"refresh_cooldown_seconds"`
+}
+
+type StatisticsConfig struct {
+	FlushIntervalSeconds int64 `json:"flush_interval_seconds"`
+}
+
+type ContactConfig struct {
+	Email string `json:"email"`
+
+	Catchall string `json:"catchall"`
+}
+
 type RateLimitConfig struct {
 	CreatePerMin int64 `json:"create_per_min"`
 
@@ -110,6 +144,14 @@ type RateLimitConfig struct {
 	MissPerMin int64 `json:"miss_per_min"`
 
 	ShorthandPerHour int64 `json:"shorthand_per_hour"`
+
+	AssetPerMin int64 `json:"asset_per_min"`
+
+	ReadPerMin int64 `json:"read_per_min"`
+
+	RefreshPerHour int64 `json:"refresh_per_hour"`
+
+	ContactPerMin int64 `json:"contact_per_min"`
 
 	GithubPerSec int64 `json:"github_per_sec"`
 

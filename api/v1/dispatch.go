@@ -1,4 +1,4 @@
-// api/dispatch.go
+// api/v1/dispatch.go
 
 package api
 
@@ -22,6 +22,12 @@ var reservedSegments = map[string]struct{}{
 	"_nuxt":       {},
 	"static":      {},
 	"public":      {},
+	"swagger":     {},
+	"explore":     {},
+	"contact":     {},
+	"docs":        {},
+	"sitemap.xml": {},
+	"version":     {},
 }
 
 // handleNoRoute is Gin's NoRoute handler. It implements the slug, info-page,
@@ -29,6 +35,10 @@ var reservedSegments = map[string]struct{}{
 func (s *Server) handleNoRoute(c *gin.Context) {
 	if c.Request.Method != http.MethodGet && c.Request.Method != http.MethodHead {
 		c.AbortWithStatus(http.StatusMethodNotAllowed)
+		return
+	}
+	if strings.HasPrefix(c.Request.URL.Path, "/api/") {
+		respond(c, fail(kindNotFound))
 		return
 	}
 
@@ -47,14 +57,14 @@ func (s *Server) handleNoRoute(c *gin.Context) {
 		first = first[:i]
 	}
 	if _, reserved := reservedSegments[first]; reserved {
-		c.AbortWithStatus(http.StatusNotFound)
+		s.serveMissing(c, http.StatusNotFound)
 		return
 	}
 
 	// Two-segment paths: owner/repo shorthand.
 	if strings.Contains(rest, "/") {
 		if !looksLikeOwnerRepo(rest) {
-			c.AbortWithStatus(http.StatusNotFound)
+			s.serveMissing(c, http.StatusNotFound)
 			return
 		}
 		parts := strings.Split(rest, "/")

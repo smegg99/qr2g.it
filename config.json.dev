@@ -1,12 +1,18 @@
 {
+  "contact": {
+    "catchall": "@{env?:CONTACT_CATCHALL_EMAIL}",
+    "email": "@{env?:CONTACT_EMAIL}"
+  },
   "db": {
     "auto_migrate": true,
     "path": "data/qr2git.sqlite"
   },
   "github": {
     "api_version": "2026-03-10",
+    "background_reserve": 15,
     "request_timeout_seconds": 15,
     "rest_base_url": "https://api.github.com",
+    "token": "@{env?:GITHUB_TOKEN}",
     "user_agent": "qr2g.it"
   },
   "logger": {
@@ -20,16 +26,28 @@
     "show_caller": false,
     "verbose": false
   },
+  "policy": {
+    "batch_size": 5,
+    "enabled": true,
+    "failure_backoff_seconds": 1800,
+    "fresh_ttl_seconds": 86400,
+    "interval_seconds": 60,
+    "refresh_cooldown_seconds": 300
+  },
   "preferences": {
     "language": "en"
   },
   "ratelimit": {
+    "asset_per_min": 600,
     "cleanup_seconds": 600,
+    "contact_per_min": 6,
     "create_per_day": 50,
     "create_per_min": 3,
     "github_burst": 20,
     "github_per_sec": 10,
     "miss_per_min": 60,
+    "read_per_min": 120,
+    "refresh_per_hour": 20,
     "resolve_per_min": 600,
     "shorthand_per_hour": 5
   },
@@ -47,9 +65,11 @@
     "trusted_proxy_mode": "cloudflare",
     "write_timeout_seconds": 15
   },
+  "statistics": {
+    "flush_interval_seconds": 10
+  },
   "turnstile": {
     "enabled": true,
-    "expected_action": "create_link",
     "expected_hostname": "",
     "request_timeout_seconds": 5,
     "secret_key": "@{env?:TURNSTILE_SECRET_KEY}",
