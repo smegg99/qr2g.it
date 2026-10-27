@@ -54,7 +54,7 @@
 </template>
 
 <script setup lang="ts">
-import { parseRepoInput } from '~/composables/useShortLink'
+import { parseRepoInput } from '~/utils/repository'
 
 const props = defineProps<{
   modelValue: string

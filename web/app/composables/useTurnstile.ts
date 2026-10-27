@@ -1,6 +1,6 @@
 // app/composables/useTurnstile.ts
 
-interface TurnstileWindow {
+interface TurnstileWindow extends Window {
   turnstile?: {
     render: (el: HTMLElement | string, opts: TurnstileRenderOptions) => string
     reset: (id: string) => void
@@ -30,13 +30,10 @@ const CONTAINER_ID = 'qr2g-turnstile-host'
 const ACTION = 'create_link'
 
 let scriptPromise: Promise<void> | null = null
-let widgetId: string | null = null
-let pendingResolve: ((token: string) => void) | null = null
-let pendingReject: ((err: Error) => void) | null = null
 
 function loadScript(): Promise<void> {
   if (typeof window === 'undefined') return Promise.reject(new Error('turnstile: window not available'))
-  const tw = window as unknown as TurnstileWindow
+  const tw = window as TurnstileWindow
   if (tw.turnstile) return Promise.resolve()
   if (scriptPromise) return scriptPromise
 
@@ -65,66 +62,70 @@ function ensureContainer(): HTMLElement {
   return el
 }
 
-function removeWidget() {
-  if (widgetId) {
-    (window as unknown as TurnstileWindow).turnstile?.remove(widgetId)
-    widgetId = null
-  }
-}
-
-function settleResolve(token: string) {
-  pendingResolve?.(token)
-  pendingResolve = null
-  pendingReject = null
-  removeWidget()
-}
-
-function settleReject(err: Error) {
-  pendingReject?.(err)
-  pendingResolve = null
-  pendingReject = null
-  removeWidget()
-}
-
 export function useTurnstile() {
-  const config = useRuntimeConfig()
-  const siteKey = (config.public.turnstileSiteKey as string) || ''
-  const isConfigured = !!siteKey
+  const siteKey = String(useRuntimeConfig().public.turnstileSiteKey || '')
+  const isConfigured = siteKey !== ''
+  let cancelCurrent: ((reason: Error) => void) | undefined
 
-  async function getToken(): Promise<string | null> {
-    if (!isConfigured) return null
-    if (typeof window === 'undefined') return null
+  onBeforeUnmount(() => cancelCurrent?.(new DOMException('turnstile: cancelled', 'AbortError')))
 
-    for (let attempt = 0; attempt < 2; attempt++) {
-      try {
-        await loadScript()
-        break
-      }
-      catch (err) {
-        if (attempt === 1) throw err
-      }
-    }
-    const turnstile = (window as unknown as TurnstileWindow).turnstile
-    if (!turnstile) throw new Error('turnstile: API unavailable')
+  function getToken(signal?: AbortSignal): Promise<string | null> {
+    if (!isConfigured || typeof window === 'undefined') return Promise.resolve(null)
+    cancelCurrent?.(new Error('turnstile: superseded by a new request'))
 
     return new Promise<string>((resolve, reject) => {
-      pendingReject?.(new Error('turnstile: superseded by a new request'))
-      removeWidget()
-      pendingResolve = resolve
-      pendingReject = reject
-
-      const onCallback = (token: string) => settleResolve(token)
+      let widget: string | undefined
+      let api: TurnstileWindow['turnstile']
+      let done = false
       let failures = 0
-      const onError = (err: unknown) => {
-        const code = String(err)
-        const retryable = /^(300|600)/.test(code) || ['200500', '110600', '110620'].includes(code)
-        const terminal = !retryable || ++failures >= 3
-        if (terminal) settleReject(new Error(`turnstile: ${code}`))
-        return !terminal
+
+      function removeWidget() {
+        const id = widget
+        widget = undefined
+        if (!id) return
+        try {
+          api?.remove(id)
+        }
+        catch {
+          // The widget may already have been removed.
+        }
       }
 
-      try {
-        widgetId = turnstile.render(ensureContainer(), {
+      function finish(token?: string, error?: unknown) {
+        if (done) return
+        done = true
+        signal?.removeEventListener('abort', onAbort)
+        if (cancelCurrent === cancel) cancelCurrent = undefined
+        removeWidget()
+        if (token !== undefined) resolve(token)
+        else reject(error)
+      }
+
+      const cancel = (reason: Error) => finish(undefined, reason)
+      const onAbort = () => cancel(new DOMException('turnstile: cancelled', 'AbortError'))
+      cancelCurrent = cancel
+      if (signal?.aborted) {
+        onAbort()
+        return
+      }
+      signal?.addEventListener('abort', onAbort, { once: true })
+
+      async function mount() {
+        for (let attempt = 0; attempt < 2; attempt++) {
+          try {
+            await loadScript()
+            break
+          }
+          catch (error) {
+            if (done) return
+            if (attempt === 1) throw error
+          }
+        }
+        if (done) return
+        api = (window as TurnstileWindow).turnstile
+        if (!api) throw new Error('turnstile: API unavailable')
+
+        widget = api.render(ensureContainer(), {
           'sitekey': siteKey,
           'execution': 'execute',
           'appearance': 'execute',
@@ -132,25 +133,32 @@ export function useTurnstile() {
           'retry': 'auto',
           'retry-interval': 1000,
           'refresh-expired': 'auto',
-          'callback': onCallback,
-          'error-callback': onError,
+          'callback': token => finish(token),
+          'error-callback': (error) => {
+            if (done) return false
+            const code = String(error)
+            const retryable = /^(300|600)/.test(code) || ['200500', '110600', '110620'].includes(code)
+            const terminal = !retryable || ++failures >= 3
+            if (terminal) finish(undefined, new Error(`turnstile: ${code}`))
+            return !terminal
+          },
           'expired-callback': () => {
-            if (!widgetId) return
+            if (!widget || done) return
             try {
-              turnstile.reset(widgetId)
+              api?.reset(widget)
             }
             catch {
-              // ignore: widget already gone
+              // The widget may already have been removed.
             }
           },
-          'timeout-callback': () => settleReject(new Error('turnstile: challenge timed out')),
-          'unsupported-callback': () => settleReject(new Error('turnstile: browser unsupported')),
+          'timeout-callback': () => finish(undefined, new Error('turnstile: challenge timed out')),
+          'unsupported-callback': () => finish(undefined, new Error('turnstile: browser unsupported')),
         })
-        turnstile.execute(widgetId)
+        if (done) removeWidget()
+        else api.execute(widget)
       }
-      catch (err) {
-        settleReject(err as Error)
-      }
+
+      void mount().catch(error => finish(undefined, error))
     })
   }
 
