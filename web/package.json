@@ -14,8 +14,8 @@
     "typecheck": "nuxt typecheck"
   },
   "dependencies": {
-    "@firecms/neat": "0.8.0",
     "@fontsource-variable/overpass": "^5.2.8",
+    "@material/material-color-utilities": "0.4.0",
     "@mdi/font": "^7.4.47",
     "@nuxtjs/i18n": "^10.2.3",
     "@pinia/colada": "1.4.4",

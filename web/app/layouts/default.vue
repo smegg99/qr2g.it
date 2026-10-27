@@ -1,7 +1,7 @@
 <!-- app/layouts/default.vue -->
 <template>
   <v-app>
-    <GroundFx />
+    <UiBackdrop />
     <a
       class="skip-link"
       href="#main"
@@ -19,7 +19,6 @@
 </template>
 
 <script setup lang="ts">
-import GroundFx from '~/components/layout/GroundFx.vue'
 import SiteHeader from '~/components/layout/SiteHeader.vue'
 import { useSettingsSync } from '~/composables/useSettingsSync'
 

@@ -15,12 +15,12 @@ importers:
 
   .:
     dependencies:
-      '@firecms/neat':
-        specifier: 0.8.0
-        version: 0.8.0
       '@fontsource-variable/overpass':
         specifier: ^5.2.8
         version: 5.2.8
+      '@material/material-color-utilities':
+        specifier: 0.4.0
+        version: 0.4.0
       '@mdi/font':
         specifier: ^7.4.47
         version: 7.4.47
@@ -6386,7 +6386,8 @@ snapshots:
       '@eslint/core': 1.2.1
       levn: 0.4.1
 
-  '@firecms/neat@0.8.0': {}
+  '@firecms/neat@0.8.0':
+    optional: true
 
   '@fontsource-variable/overpass@5.2.8': {}
 

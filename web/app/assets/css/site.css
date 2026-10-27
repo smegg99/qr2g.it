@@ -6,45 +6,36 @@
   --s99ab-container: 1060px;
   --s99ab-font-size: 15px;
   --s99ab-label-track: 0;
-  --pane-radius: 10px;
-  --pane-blur: blur(22px) saturate(1.5);
-  --pane-alpha: 70%;
+  --pane-radius: 8px;
   --pane-head-h: 44px;
   --pane-pad: 20px;
-  --pane-shadow: 0 24px 60px -24px rgb(0 0 0 / 0.55), 0 2px 8px rgb(0 0 0 / 0.25);
   --font-mono: ui-monospace, 'JetBrains Mono', 'Cascadia Code', 'SF Mono', menlo, consolas, monospace;
-}
-.v-theme--light {
-  --pane-alpha: 74%;
-  --pane-shadow: 0 24px 60px -28px rgb(20 40 60 / 0.35), 0 2px 8px rgb(20 40 60 / 0.08);
 }
 html { scroll-behavior: smooth; }
 body { margin: 0; }
-.v-application { font-family: 'Overpass Variable', system-ui, sans-serif; background: transparent; }
+.v-application { font-family: var(--s99ab-font-sans); background: rgb(var(--v-theme-background)); }
 .v-application__wrap { background: transparent; }
 .v-main { position: relative; z-index: 1; min-height: 100dvh; display: flex; flex-direction: column; }
 .v-main > .v-main__scroller, .page-body { flex: 1 0 auto; }
 .site-width { width: 100%; max-width: 1060px; margin-inline: auto; padding-inline: 24px; }
 
-/* ---- glass ---------------------------------------------------------------- */
+/* ---- surfaces ---------------------------------------------------------------- */
 
 .pane,
 .site-header .header-keys,
 .repo-bar {
-  background: color-mix(in srgb, rgb(var(--v-theme-chrome)) var(--pane-alpha), transparent);
-  backdrop-filter: var(--pane-blur);
-  -webkit-backdrop-filter: var(--pane-blur);
-  border: 1px solid color-mix(in srgb, rgb(var(--v-theme-line)) 70%, transparent);
+  background: rgb(var(--v-theme-chrome));
+  border: 1px solid rgb(var(--v-theme-line));
 }
 
-.pane { border-radius: var(--pane-radius); box-shadow: var(--pane-shadow); overflow: hidden; color: rgb(var(--v-theme-ink)); }
+.pane { border-radius: var(--pane-radius); overflow: hidden; color: rgb(var(--v-theme-ink)); }
 .pane-head {
   display: flex;
   align-items: center;
   gap: 12px;
   min-height: var(--pane-head-h);
   padding: 6px 8px 6px var(--pane-pad);
-  background: color-mix(in srgb, rgb(var(--v-theme-chrome2)) 60%, transparent);
+  background: rgb(var(--v-theme-chrome2));
   border-block: 1px solid color-mix(in srgb, rgb(var(--v-theme-line)) 60%, transparent);
   --s99ab-control-h: 30px;
   --control-h: 30px;
@@ -118,11 +109,11 @@ body { margin: 0; }
 .home-page { padding-top: clamp(84px, 16vh, 168px); padding-bottom: 48px; }
 .home-start { max-width: 720px; margin-inline: auto; text-align: center; }
 .home-brand { display: flex; justify-content: center; margin: 0; }
-.home-logo { display: block; width: 320px; max-width: 72vw; height: auto; filter: drop-shadow(0 6px 24px rgb(0 0 0 / 0.35)); }
+.home-logo { display: block; width: 320px; max-width: 72vw; height: auto; }
 .home-lead { margin: 18px auto 32px; max-width: 34em; font-size: 17px; line-height: 1.5; font-weight: 500; color: rgb(var(--v-theme-ink)); text-wrap: balance; }
 .home-error { margin-top: 16px; text-align: left; }
 .home-error:empty { display: none; }
-.home-error .v-alert { background: color-mix(in srgb, rgb(var(--v-theme-chrome)) var(--pane-alpha), transparent); backdrop-filter: var(--pane-blur); -webkit-backdrop-filter: var(--pane-blur); }
+.home-error .v-alert { background: rgb(var(--v-theme-chrome)); }
 #qr2g-turnstile-host:not(:empty) { margin-top: 20px; }
 
 .repo-bar {
@@ -132,10 +123,9 @@ body { margin: 0; }
   height: 60px;
   padding: 0 7px 0 18px;
   border-radius: 12px;
-  box-shadow: var(--pane-shadow);
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
-.repo-bar:focus-within { border-color: rgb(var(--v-theme-accent)); box-shadow: var(--pane-shadow), 0 0 0 3px color-mix(in srgb, rgb(var(--v-theme-accent)) 28%, transparent); }
+.repo-bar:focus-within { border-color: rgb(var(--v-theme-accent)); box-shadow: 0 0 0 3px color-mix(in srgb, rgb(var(--v-theme-accent)) 28%, transparent); }
 .repo-bar--error, .repo-bar--error:focus-within { border-color: rgb(var(--v-theme-error)); }
 .repo-bar__icon { color: rgb(var(--v-theme-ink2)); flex: 0 0 auto; }
 .repo-bar__input {
@@ -192,7 +182,6 @@ body { margin: 0; }
 /* ---- dialogs ------------------------------------------------------------------ */
 
 .v-overlay__scrim { background: rgb(0 0 0); }
-.help-pane { --pane-alpha: 88%; }
 .help-version { font: 12px/1 var(--font-mono); }
 .help-body { display: flex; flex-direction: column; gap: 20px; overflow-y: auto; }
 .help-intro { margin: 0; font-size: 15px; line-height: 1.6; color: rgb(var(--v-theme-ink)); }
