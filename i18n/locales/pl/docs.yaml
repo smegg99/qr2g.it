@@ -151,7 +151,7 @@ assets:
     value: "Renderuj ten sam kod QR co strona, bez przeglądarki, jako SVG, PNG lub JPG. Logo qr2g.it jest domyślnie włączone; logo=false je pomija. API renderuje też szablony presentation, poster, label i badge."
     description: "Docs page text assets.text"
   reliability:
-    value: "Kody mają margines czterech modułów i wymagają kontrastu co najmniej 4,5 między kodem a tłem; część starszych czytników odczytuje tylko ciemny kod na jasnym tle. Wygenerowany plik nie dowodzi, że każda drukarka czy aparat go odczyta; sprawdź gotowy wydruk."
+    value: "Kody mają margines czterech modułów, chyba że parametr margin ustawi od 0 do 16, i wymagają kontrastu co najmniej 4,5 między kodem a tłem; część starszych czytników odczytuje tylko ciemny kod na jasnym tle. Wygenerowany plik nie dowodzi, że każda drukarka czy aparat go odczyta; sprawdź gotowy wydruk."
     description: "Docs page text assets.reliability"
 explore:
   title:

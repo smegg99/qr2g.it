@@ -151,7 +151,7 @@ assets:
     value: "Render the same QR code as the website without a browser, as SVG, PNG or JPG. The qr2g.it logo is on by default; logo=false leaves it out. The API also renders presentation, poster, label and badge presets."
     description: "Docs page text assets.text"
   reliability:
-    value: "Codes keep a four-module quiet zone and need a contrast of at least 4.5 between modules and tile; some older scanners read only dark-on-light codes. A rendered file does not prove that every printer or camera reads it; test the final output."
+    value: "Codes have a four-module quiet zone unless margin sets 0 to 16, and need a contrast of at least 4.5 between modules and tile; some older scanners read only dark-on-light codes. A rendered file does not prove that every printer or camera reads it; test the final output."
     description: "Docs page text assets.reliability"
 explore:
   title:

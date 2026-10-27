@@ -93,7 +93,7 @@ func assetSpec(p gen.RenderLinkAssetParams) render.Spec {
 		Accent:          deref(p.Accent),
 		Caption:         deref(p.Caption),
 		ErrorCorrection: render.ECLevel(deref(p.Ec)),
-		Margin:          deref(p.Margin),
+		Margin:          p.Margin,
 		Radius:          deref(p.Radius),
 		Size:            deref(p.Size),
 		Transparent:     deref(p.Transparent),

@@ -16,7 +16,7 @@ test('a prefilled link round-trips repository and every QR choice', () => {
 
 test('invalid, oversized and unknown parameters are reported and ignored', () => {
   const params = new URLSearchParams({
-    preset: 'presentation', fg: 'red', margin: '2', size: '99999', token: 'secret',
+    preset: 'presentation', fg: 'red', margin: '17', size: '99999', token: 'secret',
     redirect: 'https://evil.example', ec: 'h', logo: 'yes', repo: 'a/b',
   })
   const back = importDesign(params)
@@ -30,6 +30,13 @@ test('invalid, oversized and unknown parameters are reported and ignored', () =>
     preset: 'unknown', fg: 'invalid', margin: 'out_of_range', size: 'out_of_range', logo: 'invalid',
     token: 'unknown', redirect: 'unknown',
   })
+})
+
+test('a quiet zone can go down to zero', () => {
+  const back = importDesign(new URLSearchParams('margin=0'))
+  assert.deepEqual(back.problems, [])
+  assert.equal(back.design.margin, 0)
+  assert.deepEqual(assetQuery(back.design), { format: 'png', margin: '0' })
 })
 
 test('the logo keeps error correction at H', () => {

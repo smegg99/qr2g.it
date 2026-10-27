@@ -8,6 +8,7 @@
     :max="max"
     :step="step"
     :suffix="suffix"
+    :disabled="disabled"
     density="compact"
     hide-details
     @blur="clamp"
@@ -23,6 +24,7 @@ const props = defineProps<{
   max?: number
   step?: number
   suffix?: string
+  disabled?: boolean
 }>()
 
 const emit = defineEmits<{ (e: 'update:modelValue', v: number): void }>()

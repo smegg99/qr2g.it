@@ -26,7 +26,7 @@ const COLOR = /^#[0-9a-f]{6}$/i
 const CONTROL = /[\u0000-\u001f\u007f]/
 
 const RANGES = {
-  margin: { min: 4, max: 16 },
+  margin: { min: 0, max: 16 },
   radius: { min: 0, max: 100 },
   size: { min: 128, max: 4000 },
 } as const

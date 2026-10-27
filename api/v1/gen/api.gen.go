@@ -643,7 +643,7 @@ type RenderLinkAssetParams struct {
 	// Ec QR error correction level. Defaults to `H` with the logo and `M` without it. The logo needs `H`.
 	Ec *RenderLinkAssetParamsEc `form:"ec,omitempty" json:"ec,omitempty"`
 
-	// Margin Quiet zone in modules.
+	// Margin Quiet zone in modules. Below 4 the code relies on the light space around it wherever it is placed; 0 leaves no margin at all.
 	Margin *int `form:"margin,omitempty" json:"margin,omitempty"`
 
 	// Radius Tile corner radius as a percentage of the largest radius that cannot clip the symbol.

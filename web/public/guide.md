@@ -34,7 +34,7 @@ Rules:
 | `fg`, `bg` | QR module and tile colour, `#rrggbb`; contrast of at least 4.5 | `#111111`, `#ffffff` |
 | `logo` | `true` draws the qr2g.it fox in the centre, in the QR colour | `true` |
 | `ec` | `L`, `M`, `Q`, `H`; the logo needs `H` | `H` with the logo, else `M` |
-| `margin` | quiet zone in modules, 4 to 16 | 4 |
+| `margin` | quiet zone in modules, 0 to 16; below 4 the code needs light space around it | 4 |
 | `radius` | tile corner radius, 0 to 100 percent of the safe maximum | 0 |
 | `size` | width in px, 128 to 4000 | 1024 |
 | `transparent` | `true` leaves out the tile | `false` |
@@ -102,8 +102,8 @@ describes each. Formats: `svg`, `png`, `jpg` (`badge` and transparent codes
 cannot be JPG). The response sets `Content-Disposition` with a name such as
 `Goptivum-qr.png`, and
 `X-Asset-Width` and `X-Asset-Height`. Text is drawn as outlines, so files need
-no fonts. Codes keep a four-module quiet zone and need a contrast of at least
-4.5 between modules and tile. Light-on-dark codes are allowed, but some older
+no fonts. Codes have a four-module quiet zone unless `margin` sets another, and
+need a contrast of at least 4.5 between modules and tile. Light-on-dark codes are allowed, but some older
 scanners read only dark-on-light ones; test printed output, because no preview
 proves every device scans it.
 

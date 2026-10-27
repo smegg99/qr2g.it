@@ -641,7 +641,8 @@ export type RenderLinkAssetData = {
          */
         ec?: 'L' | 'M' | 'Q' | 'H';
         /**
-         * Quiet zone in modules.
+         * Quiet zone in modules. Below 4 the code relies on the light space around it wherever it is placed; 0 leaves no margin at all.
+         *
          */
         margin?: number;
         /**

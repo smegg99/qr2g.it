@@ -64,18 +64,17 @@
         v-model="margin"
         :label="t('design.fields.margin')"
         :suffix="t('design.modules')"
-        :min="4"
+        :min="0"
         :max="16"
         :step="1"
       />
     </QrControlField>
-    <QrControlField
-      v-if="!d.transparent"
-      :label="t('design.fields.radius')"
-    >
+    <!-- A transparent code has no tile to round; the field stays in place, disabled, so nothing moves. -->
+    <QrControlField :label="t('design.fields.radius')">
       <NumberField
         :id="`${id}-r`"
         v-model="radius"
+        :disabled="d.transparent"
         :label="t('design.fields.radius')"
         suffix="%"
         :min="0"

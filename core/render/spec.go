@@ -42,7 +42,7 @@ const (
 
 // Limits and defaults shared with the API layer.
 const (
-	MinMargin     = 4
+	MinMargin     = 0
 	MaxMargin     = 16
 	DefaultMargin = 4
 	MaxRadius     = 100
@@ -96,14 +96,15 @@ type Spec struct {
 	Accent          string
 	Caption         string
 	ErrorCorrection ECLevel
-	Margin          int
-	Radius          int
-	Size            int
-	Transparent     bool
-	Logo            bool
-	LabelWidthMM    int
-	LabelHeightMM   int
-	DPI             int
+	// Margin is the quiet zone in modules; nil means DefaultMargin, and 0 is a code without one.
+	Margin        *int
+	Radius        int
+	Size          int
+	Transparent   bool
+	Logo          bool
+	LabelWidthMM  int
+	LabelHeightMM int
+	DPI           int
 }
 
 // Content is the repository data placed on an asset.
@@ -136,6 +137,8 @@ func (e *FieldError) Error() string { return "render: " + e.Field + " " + e.Code
 
 func fieldErr(field, code string) *FieldError { return &FieldError{Field: field, Code: code} }
 
+func ptr[T any](v T) *T { return &v }
+
 // Normalize applies defaults, validates every field and clears fields the preset ignores.
 func Normalize(s Spec) (Spec, error) {
 	if err := normalizeEnums(&s); err != nil {
@@ -147,10 +150,10 @@ func Normalize(s Spec) (Spec, error) {
 	if err := normalizeCaption(&s); err != nil {
 		return s, err
 	}
-	if s.Margin == 0 {
-		s.Margin = DefaultMargin
+	if s.Margin == nil {
+		s.Margin = ptr(DefaultMargin)
 	}
-	if s.Margin < MinMargin || s.Margin > MaxMargin {
+	if *s.Margin < MinMargin || *s.Margin > MaxMargin {
 		return s, fieldErr("margin", CodeOutOfRange)
 	}
 	if s.Radius < 0 || s.Radius > MaxRadius {
@@ -277,7 +280,7 @@ func normalizeSize(s *Spec) error {
 	default:
 		s.Size, s.Caption, s.Theme = 0, "", ThemeLight
 		s.Foreground, s.Background = DefaultForeground, DefaultBackground
-		s.Margin, s.Radius, s.ErrorCorrection, s.Logo = DefaultMargin, 0, ECMedium, false
+		s.Margin, s.Radius, s.ErrorCorrection, s.Logo = ptr(DefaultMargin), 0, ECMedium, false
 		s.LabelWidthMM, s.LabelHeightMM, s.DPI = 0, 0, 0
 		return nil
 	}

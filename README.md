@@ -150,7 +150,7 @@ A batch takes up to 25 repositories and answers each with `created`, `existing`,
 curl --fail-with-body -sS -OJ "https://qr2g.it/api/v1/links/2/asset?format=png&download=true"
 ```
 
-The default `qr` preset draws the qr2g.it logo in the centre (`logo=false` leaves it out; the logo needs error correction `H`). The API also accepts `presentation`, `poster`, `label`, and `badge`; the [usage guide](https://qr2g.it/guide.md) lists the options. Files are named after the repository and preset, for example `Goptivum-qr.png`. Every code keeps a quiet zone of at least four modules and needs a contrast ratio of at least 4.5 between modules and tile; light-on-dark codes are allowed. A rendered file does not prove that every printer or camera reads it.
+The default `qr` preset draws the qr2g.it logo in the centre (`logo=false` leaves it out; the logo needs error correction `H`). The API also accepts `presentation`, `poster`, `label`, and `badge`; the [usage guide](https://qr2g.it/guide.md) lists the options. Files are named after the repository and preset, for example `Goptivum-qr.png`. Every code has a four-module quiet zone unless `margin` sets 0 to 16, and needs a contrast ratio of at least 4.5 between modules and tile; light-on-dark codes are allowed. A rendered file does not prove that every printer or camera reads it.
 
 ### Listed repositories and statistics
 

@@ -26,7 +26,7 @@ func encode(text string, s Spec) (symbol, error) {
 	if s.Logo && (code.Size-17)/4 >= 7 {
 		return symbol{}, fieldErr("logo", CodeUnsupported)
 	}
-	return symbol{code: code, margin: s.Margin, spec: s}, nil
+	return symbol{code: code, margin: *s.Margin, spec: s}, nil
 }
 
 // hole is the side in modules of the centre square kept free for the logo; zero without one.

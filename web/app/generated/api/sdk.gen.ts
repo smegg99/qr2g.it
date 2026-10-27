@@ -84,7 +84,7 @@ export const refreshLinkPolicy = <ThrowOnError extends boolean = false>(options:
 /**
  * Render a QR code, share card or badge
  *
- * Renders the link with a website preset. The QR keeps a quiet zone of at least four modules and requires a contrast ratio of at least 4.5 between modules and tile; light modules on a dark tile are allowed. Text is drawn as vector outlines, so the file needs no fonts. A rendered preview does not prove scan reliability for every printer, screen or camera. Not counted as a redirect.
+ * Renders the link with a website preset. The QR has a four-module quiet zone unless `margin` sets another and requires a contrast ratio of at least 4.5 between modules and tile; light modules on a dark tile are allowed. Text is drawn as vector outlines, so the file needs no fonts. A rendered preview does not prove scan reliability for every printer, screen or camera. Not counted as a redirect.
  *
  */
 export const renderLinkAsset = <ThrowOnError extends boolean = false>(options: Options<RenderLinkAssetData, ThrowOnError>): RequestResult<RenderLinkAssetResponses, RenderLinkAssetErrors, ThrowOnError> => (options.client ?? client).get<RenderLinkAssetResponses, RenderLinkAssetErrors, ThrowOnError>({ url: '/links/{slug}/asset', ...options });

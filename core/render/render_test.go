@@ -276,8 +276,8 @@ func TestNormalize(t *testing.T) {
 		{"named colour", Spec{Background: "white"}, "background", CodeInvalid},
 		{"low contrast", Spec{Foreground: "#777777", Background: "#888888"}, "foreground", CodeLowContrast},
 		{"accent contrast", Spec{Preset: PresetPresentation, Accent: "#fafafa"}, "accent", CodeLowContrast},
-		{"margin", Spec{Margin: 3}, "margin", CodeOutOfRange},
-		{"margin high", Spec{Margin: 17}, "margin", CodeOutOfRange},
+		{"margin negative", Spec{Margin: ptr(-1)}, "margin", CodeOutOfRange},
+		{"margin high", Spec{Margin: ptr(17)}, "margin", CodeOutOfRange},
 		{"radius", Spec{Radius: 101}, "radius", CodeOutOfRange},
 		{"caption long", Spec{Caption: strings.Repeat("ż", MaxCaptionRunes+1)}, "caption", CodeOutOfRange},
 		{"caption control", Spec{Caption: "a\nb"}, "caption", CodeInvalid},
@@ -306,9 +306,16 @@ func TestNormalize(t *testing.T) {
 	}
 	got, err := Normalize(Spec{Foreground: "#0A0B0C", Caption: " x "})
 	want := Spec{Preset: PresetQR, Format: FormatPNG, Theme: ThemeLight, Foreground: "#0a0b0c", Background: DefaultBackground,
-		ErrorCorrection: ECMedium, Margin: DefaultMargin, Size: DefaultQRSize}
-	if err != nil || got != want {
-		t.Fatalf("defaults: %+v %v", got, err)
+		ErrorCorrection: ECMedium, Size: DefaultQRSize}
+	if err != nil || got.Margin == nil || *got.Margin != DefaultMargin {
+		t.Fatalf("default margin: %+v %v", got, err)
+	}
+	got.Margin = nil
+	if got != want {
+		t.Fatalf("defaults: %+v", got)
+	}
+	if bare := mustNormalize(t, Spec{Margin: ptr(0)}); *bare.Margin != 0 {
+		t.Fatalf("an explicit zero quiet zone became %d", *bare.Margin)
 	}
 	if got := mustNormalize(t, Spec{Logo: true}); got.ErrorCorrection != ECHigh {
 		t.Fatalf("logo default ec: %+v", got)
@@ -449,6 +456,23 @@ func TestTerminalMatchesSymbol(t *testing.T) {
 					}
 				}
 			}
+		}
+	}
+}
+
+// A code without a quiet zone still decodes once it sits on a light surface, which then acts as one.
+func TestZeroQuietZoneDecodesOnLightSurface(t *testing.T) {
+	for _, logo := range []bool{false, true} {
+		a := render(t, Content{URL: "https://qr2g.it/Q", Address: "qr2g.it/Q"}, Spec{Size: 600, Margin: ptr(0), Logo: logo})
+		img, err := png.Decode(bytes.NewReader(a.Body))
+		if err != nil {
+			t.Fatal(err)
+		}
+		page := image.NewRGBA(image.Rect(0, 0, 700, 700))
+		draw.Draw(page, page.Bounds(), &image.Uniform{color.White}, image.Point{}, draw.Src)
+		draw.Draw(page, image.Rect(50, 50, 650, 650), img, image.Point{}, draw.Src)
+		if got := decode(t, page); got != "https://qr2g.it/Q" {
+			t.Fatalf("logo=%v: decoded %q", logo, got)
 		}
 	}
 }
