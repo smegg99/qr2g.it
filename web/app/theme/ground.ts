@@ -2,63 +2,51 @@
 import type { NeatConfig } from '@firecms/neat'
 
 type Stop = readonly [color: string, influence: number]
-type Shape = Partial<Omit<NeatConfig, 'colors' | 'ref'>>
+type Shape = Pick<NeatConfig, 'waveFrequencyX' | 'waveFrequencyY'>
 
 interface Scene {
   name: string
   dark: readonly Stop[]
   light: readonly Stop[]
   shape: Shape
-  darkShape?: Shape
 }
 
 export const SCENES: readonly Scene[] = [
   {
     name: 'tide',
-    dark: [['#0b4f4a', 0.2], ['#26307e', 0.22], ['#0f7a6c', 0.16], ['#5c3a12', 0.06], ['#151a3d', 0.24]],
-    light: [['#a6e6da', 0.22], ['#c3c9f6', 0.22], ['#7fd0c3', 0.16], ['#efe3c6', 0.05], ['#dfe4f7', 0.24]],
-    shape: { waveFrequencyX: 2.2, waveFrequencyY: 3.1, waveAmplitude: 3.2, horizontalPressure: 3, verticalPressure: 4 },
-    darkShape: { waveAmplitude: 4.2 },
+    dark: [['#1c3434', 0.22], ['#222b40', 0.2], ['#213a35', 0.18], ['#35313a', 0.1], ['#141c24', 0.3]],
+    light: [['#e3efec', 0.22], ['#e6eaf3', 0.2], ['#dbece6', 0.18], ['#efe9e2', 0.1], ['#edf0f5', 0.3]],
+    shape: { waveFrequencyX: 1.4, waveFrequencyY: 1.8 },
   },
   {
     name: 'aurora',
-    dark: [['#073d2c', 0.2], ['#11a37f', 0.14], ['#3b2a8a', 0.2], ['#86307a', 0.08], ['#08141c', 0.3]],
-    light: [['#b3f0da', 0.2], ['#86dcc4', 0.16], ['#d2c8f7', 0.2], ['#f3c8e8', 0.1], ['#e8f4f2', 0.28]],
-    shape: {
-      waveFrequencyX: 4.2, waveFrequencyY: 1.2, waveAmplitude: 5, horizontalPressure: 1.6, verticalPressure: 6,
-      flowEnabled: true, flowDistortionA: 3.4, flowDistortionB: 2.2, flowScale: 2.4, flowEase: 0.4,
-    },
+    dark: [['#20372f', 0.22], ['#263b39', 0.2], ['#302e42', 0.18], ['#3b303e', 0.1], ['#171e27', 0.3]],
+    light: [['#e3eee8', 0.22], ['#dcece8', 0.2], ['#e8e5f0', 0.18], ['#efe7ed', 0.1], ['#eef1f3', 0.3]],
+    shape: { waveFrequencyX: 1.8, waveFrequencyY: 1.3 },
   },
   {
     name: 'ember',
-    dark: [['#2c1033', 0.24], ['#6e2a2a', 0.2], ['#a3561d', 0.14], ['#0d4a46', 0.05], ['#160b1a', 0.28]],
-    light: [['#f2d5c6', 0.22], ['#efc2ae', 0.16], ['#e6d0f2', 0.2], ['#b8e6dc', 0.1], ['#f7ede6', 0.26]],
-    shape: { waveFrequencyX: 1.2, waveFrequencyY: 1.6, waveAmplitude: 6.5, horizontalPressure: 4, verticalPressure: 3, colorBlending: 9, speed: 1.8 },
+    dark: [['#332b35', 0.22], ['#3b3030', 0.2], ['#3c352c', 0.18], ['#253733', 0.1], ['#201c25', 0.3]],
+    light: [['#efe7e3', 0.22], ['#eee2df', 0.2], ['#eee7ef', 0.18], ['#e1ece7', 0.1], ['#f2eeec', 0.3]],
+    shape: { waveFrequencyX: 1.2, waveFrequencyY: 1.5 },
   },
   {
     name: 'glacier',
-    dark: [['#0b2f4a', 0.24], ['#1d6390', 0.18], ['#0f7f88', 0.16], ['#b9dcea', 0.04], ['#071420', 0.3]],
-    light: [['#cfe8f7', 0.24], ['#a6d6ea', 0.18], ['#bde8e3', 0.16], ['#ffffff', 0.12], ['#e3eef6', 0.26]],
-    shape: {
-      waveFrequencyX: 2.8, waveFrequencyY: 2.4, waveAmplitude: 2.6, highlights: 7, speed: 1.6,
-      domainWarpEnabled: true, domainWarpIntensity: 0.45, domainWarpScale: 2.6,
-    },
-    darkShape: { highlights: 4 },
+    dark: [['#24313d', 0.22], ['#2a3a46', 0.2], ['#283d3e', 0.18], ['#39424b', 0.1], ['#171e29', 0.3]],
+    light: [['#e4edf3', 0.22], ['#dce9ef', 0.2], ['#e0eeeb', 0.18], ['#edf1f5', 0.1], ['#eaf0f4', 0.3]],
+    shape: { waveFrequencyX: 1.6, waveFrequencyY: 1.7 },
   },
   {
     name: 'moss',
-    dark: [['#1d3a1a', 0.24], ['#3f5c1e', 0.16], ['#0f6e5c', 0.18], ['#6e5c18', 0.08], ['#0c1710', 0.3]],
-    light: [['#d6ecc2', 0.22], ['#c3e1ab', 0.16], ['#ade0d1', 0.18], ['#f1e5b2', 0.1], ['#eef4e6', 0.26]],
-    shape: {
-      waveFrequencyX: 3.2, waveFrequencyY: 2, waveAmplitude: 3.6, horizontalPressure: 5, verticalPressure: 2.5,
-      flowEnabled: true, flowDistortionA: 1.2, flowDistortionB: 3.2, flowScale: 1.4, flowEase: 0.6,
-    },
+    dark: [['#2b352b', 0.22], ['#343b2b', 0.2], ['#283b34', 0.18], ['#3c382c', 0.1], ['#1b231e', 0.3]],
+    light: [['#e7eee1', 0.22], ['#e3ebdc', 0.2], ['#dfede6', 0.18], ['#eeeadd', 0.1], ['#edf1e9', 0.3]],
+    shape: { waveFrequencyX: 1.7, waveFrequencyY: 1.4 },
   },
   {
     name: 'dusk',
-    dark: [['#28205e', 0.22], ['#5c2a6c', 0.16], ['#a04a5c', 0.1], ['#0f6a70', 0.12], ['#110e2a', 0.3]],
-    light: [['#d5cff6', 0.22], ['#ecc8e9', 0.16], ['#f6d2c8', 0.12], ['#bfe6e2', 0.14], ['#efecf8', 0.26]],
-    shape: { waveFrequencyX: 1.4, waveFrequencyY: 4.6, waveAmplitude: 4.4, horizontalPressure: 7, verticalPressure: 1.6, speed: 2 },
+    dark: [['#2d2b3e', 0.22], ['#3a2e40', 0.2], ['#40323b', 0.18], ['#283a3d', 0.1], ['#1e1d2b', 0.3]],
+    light: [['#e8e5f1', 0.22], ['#eee4ee', 0.2], ['#efe6e4', 0.18], ['#e1eceb', 0.1], ['#eeedf3', 0.3]],
+    shape: { waveFrequencyX: 1.3, waveFrequencyY: 1.9 },
   },
 ]
 
@@ -79,7 +67,7 @@ export function pickScene(): Scene {
     localStorage.setItem(LAST_KEY, scene.name)
   }
   catch {
-    // Scene selection still works without session storage.
+    // Scene selection still works without local storage.
   }
   return scene
 }
@@ -92,33 +80,32 @@ export function sceneWashes(scene: Scene, dark: boolean): string[] {
 
 export function groundConfig(scene: Scene, dark: boolean, background: string, still: boolean): Omit<NeatConfig, 'ref'> {
   const stops = dark ? scene.dark : scene.light
-  const shape = { ...scene.shape, ...(dark ? scene.darkShape : undefined) }
   return {
     colors: stops.map(([color, influence]) => ({ color, influence, enabled: true })),
-    speed: 2.4,
-    horizontalPressure: 3,
-    verticalPressure: 4,
-    waveFrequencyX: 2.2,
-    waveFrequencyY: 3.1,
-    waveAmplitude: 3.6,
-    shadows: dark ? 5 : 2,
-    highlights: dark ? 3 : 5,
-    colorBlending: dark ? 7 : 6,
-    colorSaturation: dark ? 1.6 : 1.1,
-    colorBrightness: dark ? 1 : 1.04,
+    speed: 0.55,
+    horizontalPressure: 2.6,
+    verticalPressure: 2.9,
+    waveAmplitude: 1.7,
+    shadows: 1,
+    highlights: 1,
+    colorBlending: 9,
+    colorSaturation: -0.25,
+    colorBrightness: 1,
     grainScale: 2,
-    grainIntensity: dark ? 0.07 : 0.04,
+    grainIntensity: dark ? 0.02 : 0.015,
     grainSparsity: 0,
-    grainSpeed: 1,
-    vignetteIntensity: dark ? 0.18 : 0.06,
+    grainSpeed: 0,
+    vignetteIntensity: dark ? 0.08 : 0.03,
     vignetteRadius: 0.85,
+    flowEnabled: false,
+    domainWarpEnabled: false,
     wireframe: false,
     backgroundColor: background,
     backgroundAlpha: 1,
     // The shader is blurred by design, so half resolution looks the same at a quarter of the cost.
     resolution: 0.5,
     yOffset: 0,
-    ...shape,
+    ...scene.shape,
     ...(still ? { speed: 0, grainSpeed: 0 } : {}),
   }
 }

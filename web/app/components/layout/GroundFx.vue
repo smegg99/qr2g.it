@@ -121,9 +121,9 @@ onBeforeUnmount(() => {
   overflow: hidden;
   pointer-events: none;
   background:
-    radial-gradient(60% 50% at 18% 20%, color-mix(in srgb, var(--ground-a) 55%, transparent), transparent 70%),
-    radial-gradient(50% 45% at 82% 30%, color-mix(in srgb, var(--ground-b) 50%, transparent), transparent 70%),
-    radial-gradient(55% 50% at 60% 90%, color-mix(in srgb, var(--ground-c) 35%, transparent), transparent 70%),
+    radial-gradient(60% 50% at 18% 20%, color-mix(in srgb, var(--ground-a) 30%, transparent), transparent 70%),
+    radial-gradient(50% 45% at 82% 30%, color-mix(in srgb, var(--ground-b) 25%, transparent), transparent 70%),
+    radial-gradient(55% 50% at 60% 90%, color-mix(in srgb, var(--ground-c) 20%, transparent), transparent 70%),
     rgb(var(--v-theme-background));
 }
 
@@ -141,7 +141,7 @@ onBeforeUnmount(() => {
   opacity: var(--ground-strength);
 }
 
-/* Settles the top and bottom edges into the page ground, so the corner keys sit on calm colour. */
+/* Keep the header and page edges close to the theme background. */
 .ground__veil {
   position: absolute;
   inset: 0;
@@ -151,13 +151,13 @@ onBeforeUnmount(() => {
 }
 
 .v-theme--dark .ground {
-  --ground-strength: 0.92;
+  --ground-strength: 0.45;
   --ground-veil-top: 0.55;
   --ground-veil-bottom: 0.7;
 }
 
 .v-theme--light .ground {
-  --ground-strength: 0.9;
+  --ground-strength: 0.38;
   --ground-veil-top: 0.5;
   --ground-veil-bottom: 0.6;
 }
