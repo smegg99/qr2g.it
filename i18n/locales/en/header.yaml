@@ -14,7 +14,7 @@ home:
   value: qr2g.it home
   description: Text shown in header / home
 docs:
-  value: curl API
+  value: API and automation
   description: Text shown in header / docs
 skip:
   value: Skip to content
@@ -22,3 +22,6 @@ skip:
 links:
   value: Project links
   description: Text shown in header / links
+contact:
+  value: "Contact"
+  description: "Header link to the contact page"

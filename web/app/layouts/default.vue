@@ -7,6 +7,8 @@
       href="#main"
     >{{ t('header.skip') }}</a>
     <SiteHeader />
+    <ScrollRail />
+    <UiToastHost />
     <v-main
       id="main"
       tabindex="-1"
@@ -19,6 +21,7 @@
 </template>
 
 <script setup lang="ts">
+import ScrollRail from '~/components/layout/ScrollRail.vue'
 import SiteHeader from '~/components/layout/SiteHeader.vue'
 import { useSettingsSync } from '~/composables/useSettingsSync'
 

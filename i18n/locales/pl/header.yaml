@@ -14,7 +14,7 @@ home:
   value: Strona główna qr2g.it
   description: Text shown in header / home
 docs:
-  value: API curl
+  value: API i automatyzacja
   description: Text shown in header / docs
 skip:
   value: Przejdź do treści
@@ -22,3 +22,6 @@ skip:
 links:
   value: Linki projektu
   description: Text shown in header / links
+contact:
+  value: "Kontakt"
+  description: "Header link to the contact page"

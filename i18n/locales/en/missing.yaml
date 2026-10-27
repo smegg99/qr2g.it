@@ -1,0 +1,31 @@
+home:
+  value: "Create a link"
+  description: "Button to the generator"
+checking:
+  title:
+    value: "Checking link..."
+    description: "Missing page while loading"
+  text:
+    value: "One moment."
+    description: "Missing page while loading"
+missing:
+  title:
+    value: "Page not found"
+    description: "Missing page title"
+  text:
+    value: "This address is not a qr2g.it link or page."
+    description: "Missing page text"
+unavailable:
+  title:
+    value: "Repository is no longer publicly available"
+    description: "Unavailable link title"
+  text:
+    value: "The link stays reserved. If the repository becomes public again, the same link works again."
+    description: "Unavailable link text"
+removed:
+  title:
+    value: "Link removed"
+    description: "Removed link title"
+  text:
+    value: "This link was removed after a request. Its address is never reused."
+    description: "Removed link text"

@@ -1,0 +1,15 @@
+title:
+  value: "Contact"
+  description: "Contact page title"
+lead:
+  value: "Questions, a problem with a link, or a removal request: write to the address below."
+  description: "Contact page lead"
+email:
+  value: "Email"
+  description: "Address row label"
+copy:
+  value: "Copy address"
+  description: "Copy button"
+copied:
+  value: "Address copied"
+  description: "Copy confirmation"

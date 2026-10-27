@@ -1,0 +1,15 @@
+title:
+  value: "Kontakt"
+  description: "Contact page title"
+lead:
+  value: "Pytania, problem z linkiem albo prośba o usunięcie: napisz na adres poniżej."
+  description: "Contact page lead"
+email:
+  value: "E-mail"
+  description: "Address row label"
+copy:
+  value: "Kopiuj adres"
+  description: "Copy button"
+copied:
+  value: "Skopiowano adres"
+  description: "Copy confirmation"
