@@ -30,8 +30,25 @@
             {{ t('docs.response') }}
           </p>
           <pre class="response"><code>https://qr2g.it/2</code></pre>
+          <p>{{ t('docs.short.sideEffects') }}</p>
+          <p>{{ t('docs.short.qr') }}</p>
+          <CodeExample :code="CURL.qr" />
+        </section>
+        <section
+          id="text"
+          class="docs-section"
+        >
+          <h2>{{ t('docs.text.title') }}</h2>
           <p>{{ t('docs.short.explicit') }}</p>
           <CodeExample :code="CURL.text" />
+        </section>
+        <section
+          id="lookup"
+          class="docs-section"
+        >
+          <h2>{{ t('docs.lookup.title') }}</h2>
+          <p>{{ t('docs.inspect.lookup') }}</p>
+          <CodeExample :code="CURL.lookup" />
         </section>
         <section
           id="inspect"
@@ -64,6 +81,55 @@
           <p>{{ t('docs.create.result') }}</p>
         </section>
         <section
+          id="automation"
+          class="docs-section"
+        >
+          <h2>{{ t('docs.automation.title') }}</h2>
+          <p>{{ t('docs.automation.text') }}</p>
+          <CodeExample :code="CURL.automation" />
+        </section>
+        <section
+          id="batch"
+          class="docs-section"
+        >
+          <h2>{{ t('docs.batch.title') }}</h2>
+          <p>{{ t('docs.automation.batch') }}</p>
+          <CodeExample :code="CURL.batch" />
+          <p>{{ t('docs.automation.quota') }}</p>
+          <CodeExample :code="CURL.usage" />
+        </section>
+        <section
+          id="assets"
+          class="docs-section"
+        >
+          <h2>{{ t('docs.assets.title') }}</h2>
+          <p>{{ t('docs.assets.text') }}</p>
+          <CodeExample :code="CURL.asset" />
+          <p>{{ t('docs.assets.reliability') }}</p>
+        </section>
+        <section
+          id="explore"
+          class="docs-section"
+        >
+          <h2>{{ t('docs.explore.title') }}</h2>
+          <p>{{ t('docs.explore.text') }}</p>
+          <CodeExample :code="CURL.search" />
+          <p>{{ t('docs.explore.stats') }}</p>
+          <CodeExample :code="CURL.stats" />
+          <p>{{ t('docs.explore.top') }}</p>
+          <CodeExample :code="CURL.top" />
+        </section>
+        <section
+          id="prefill"
+          class="docs-section"
+        >
+          <h2>{{ t('docs.prefill.title') }}</h2>
+          <p>{{ t('docs.prefill.text') }}</p>
+          <CodeExample :code="DESIGN_LINK_EXAMPLE" />
+          <p>{{ t('docs.prefill.params') }}</p>
+          <p>{{ t('docs.prefill.honest') }}</p>
+        </section>
+        <section
           id="limits"
           class="docs-section"
         >
@@ -75,6 +141,12 @@
             <li>{{ t('docs.limits.known') }}</li>
           </ul>
           <p>{{ t('docs.limits.errors') }}</p>
+        </section>
+        <section
+          id="statuses"
+          class="docs-section"
+        >
+          <h2>{{ t('docs.statuses.title') }}</h2>
           <div class="status-table-wrap">
             <table class="status-table">
               <caption class="sr-only">
@@ -101,12 +173,26 @@
               </tbody>
             </table>
           </div>
-          <p class="mt-5">
-            <a
-              href="/swagger/index.html"
-              class="text-accent"
-            >{{ t('docs.swagger') }}</a>
-          </p>
+          <ul class="docs-list mt-5">
+            <li>
+              <a
+                href="/api/v1/openapi.yaml"
+                class="text-accent"
+              >{{ t('docs.openapi') }}</a>
+            </li>
+            <li>
+              <a
+                href="/swagger/index.html"
+                class="text-accent"
+              >{{ t('docs.swagger') }}</a>
+            </li>
+            <li>
+              <a
+                href="/guide.md"
+                class="text-accent"
+              >{{ t('docs.guide') }}</a>
+            </li>
+          </ul>
         </section>
       </div>
     </Pane>
@@ -116,10 +202,10 @@
 <script setup lang="ts">
 import Pane from '~/components/common/Pane.vue'
 import CodeExample from '~/components/docs/CodeExample.vue'
-import { CURL } from '~/content/curl'
+import { CURL, DESIGN_LINK_EXAMPLE } from '~/content/curl'
 
 const { t } = useI18n()
-const sections = ['short', 'inspect', 'resolve', 'create', 'limits'] as const
-const statuses = ['200', '201', '302', '400', '403', '404', '410', '429', '503'] as const
+const sections = ['short', 'text', 'lookup', 'inspect', 'resolve', 'create', 'automation', 'batch', 'assets', 'explore', 'prefill', 'limits', 'statuses'] as const
+const statuses = ['200', '201', '302', '400', '401', '403', '404', '410', '429', '503'] as const
 useSeoMeta({ title: () => `${t('docs.title')} | qr2g.it`, description: () => t('docs.intro') })
 </script>

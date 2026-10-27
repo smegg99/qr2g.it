@@ -1,0 +1,8 @@
+# qr2g.it
+
+> Permanent short links and QR codes for public GitHub repositories. One repository has one canonical link that follows it through renames and transfers.
+
+## Docs
+
+- [Usage guide](https://qr2g.it/guide.md): prefilled design links for chats, the HTTP API for scripts and coding agents, limits and error codes.
+- [OpenAPI contract](https://qr2g.it/api/v1/openapi.yaml): machine-readable definition of every /api/v1 operation.

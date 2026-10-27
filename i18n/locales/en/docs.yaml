@@ -1,8 +1,8 @@
 title:
-  value: curl API
+  value: API and automation
   description: Text shown in docs / title
 intro:
-  value: Create and inspect short links with curl.
+  value: Create, inspect and export links with curl, scripts or coding agents.
   description: Text shown in docs / intro
 contents:
   value: On this page
@@ -32,6 +32,12 @@ short:
   explicit:
     value: 'curl is recognized automatically. For another client, send Accept: text/plain or add ?format=text. Opening the same repository path in a browser redirects to its short link.'
     description: Text shown in docs / short / explicit
+  sideEffects:
+    value: "This shorthand is not a pure read: for a repository qr2g.it does not know yet, it verifies the repository on GitHub and creates its link (5 per hour per IP; the operator can also require a browser check). Use the lookup endpoint below when you only want to read."
+    description: "Docs page text short.sideEffects"
+  qr:
+    value: "Add ?qr to draw the QR code above the link with Unicode blocks, for a dark terminal; ?qr=invert suits a light one. Quote the URL so the shell leaves the ? alone."
+    description: "Docs page text short.qr"
 inspect:
   title:
     value: Inspect a link
@@ -42,6 +48,9 @@ inspect:
   info:
     value: A plus sign after the slug returns the same metadata. Slugs use uppercase base36; keep their case.
     description: Text shown in docs / inspect / info
+  lookup:
+    value: "Find the existing link of a repository without creating one and without a GitHub call. A missing link answers 404 link_not_found."
+    description: "Docs page text inspect.lookup"
 resolve:
   title:
     value: Check the destination
@@ -118,3 +127,77 @@ status:
   '503':
     value: GitHub, Turnstile, or repository verification is temporarily unavailable.
     description: Text shown in docs / status / 503
+  '401':
+    value: "An automation token is required, unknown or revoked."
+    description: "Docs page text status.401"
+automation:
+  title:
+    value: "Automation tokens"
+    description: "Docs page text automation.title"
+  text:
+    value: "Coding agents and scripts use a revocable token issued by the operator instead of the browser check. Repeating a creation request returns the same canonical link, so retries are safe. Every response carries X-RateLimit-Limit, X-RateLimit-Remaining and X-RateLimit-Reset."
+    description: "Docs page text automation.text"
+  batch:
+    value: "Create or reuse up to 25 repositories in one request. Each entry has its own outcome or error and costs one unit of quota."
+    description: "Docs page text automation.batch"
+  quota:
+    value: "Read today's quota without spending it. A 429 quota_exceeded answer carries Retry-After until the next UTC day."
+    description: "Docs page text automation.quota"
+assets:
+  title:
+    value: "QR codes"
+    description: "Docs page text assets.title"
+  text:
+    value: "Render the same QR code as the website without a browser, as SVG, PNG or JPG. The qr2g.it logo is on by default; logo=false leaves it out. The API also renders presentation, poster, label and badge presets."
+    description: "Docs page text assets.text"
+  reliability:
+    value: "Codes keep a four-module quiet zone and need a contrast of at least 4.5 between modules and tile; some older scanners read only dark-on-light codes. A rendered file does not prove that every printer or camera reads it; test the final output."
+    description: "Docs page text assets.reliability"
+explore:
+  title:
+    value: "Listed repositories and statistics"
+    description: "Docs page text explore.title"
+  text:
+    value: "Search listed repositories with pagination. Only repositories submitted to qr2g.it that are public and not opted out appear."
+    description: "Docs page text explore.text"
+  stats:
+    value: "Read daily filtered redirects for a listed repository. They exclude HEAD requests, identifiable bots, previews and API traffic, and are not unique people."
+    description: "Docs page text explore.stats"
+  top:
+    value: "The most visited listed repositories over the last 30 days, with daily counts, their total and the time of the latest counted redirect. The home page shows the top three."
+    description: "Docs page text explore.top"
+prefill:
+  title:
+    value: "Prefilled design links"
+    description: "Docs page text prefill.title"
+  text:
+    value: "Any chat or document can link to qr2g.it with a repository and design already filled in. Opening the link creates nothing; the visitor still presses Get link."
+    description: "Docs page text prefill.text"
+  params:
+    value: "Parameters: repo, fg, bg, logo, ec, margin, radius, size, transparent and format. They match the asset endpoint. Unknown or invalid values are ignored and listed on the page."
+    description: "Docs page text prefill.params"
+  honest:
+    value: "A design link is not a short link. Do not invent a slug or claim a link exists until qr2g.it shows it."
+    description: "Docs page text prefill.honest"
+openapi:
+  value: "Machine-readable OpenAPI contract"
+  description: "Docs page text openapi"
+guide:
+  value: "Markdown usage guide for agents and chats"
+  description: "Docs page text guide"
+text:
+  title:
+    value: "Plain text"
+    description: "Docs section title"
+lookup:
+  title:
+    value: "Read without creating"
+    description: "Docs section title"
+batch:
+  title:
+    value: "Batch and quota"
+    description: "Docs section title"
+statuses:
+  title:
+    value: "Status codes"
+    description: "Docs section title"

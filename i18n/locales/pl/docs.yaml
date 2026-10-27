@@ -1,8 +1,8 @@
 title:
-  value: API curl
+  value: API i automatyzacja
   description: Text shown in docs / title
 intro:
-  value: Twórz i sprawdzaj krótkie linki za pomocą curl.
+  value: Twórz, sprawdzaj i eksportuj linki przez curl, skrypty lub agentów.
   description: Text shown in docs / intro
 contents:
   value: Na tej stronie
@@ -32,6 +32,12 @@ short:
   explicit:
     value: 'curl jest rozpoznawany automatycznie. Dla innego klienta wyślij Accept: text/plain lub dodaj ?format=text. Otwarcie tej samej ścieżki repozytorium w przeglądarce przekieruje do krótkiego linku.'
     description: Text shown in docs / short / explicit
+  sideEffects:
+    value: "To skrócenie nie jest samym odczytem: dla repozytorium, którego qr2g.it jeszcze nie zna, sprawdza je na GitHubie i tworzy link (5 na godzinę na IP; operator może też wymagać sprawdzenia przeglądarki). Użyj endpointu lookup poniżej, gdy chcesz tylko odczytać."
+    description: "Docs page text short.sideEffects"
+  qr:
+    value: "Dodaj ?qr, aby nad linkiem narysować kod QR znakami Unicode dla ciemnego terminala; ?qr=invert pasuje do jasnego. Ujmij adres w cudzysłów, aby powłoka nie interpretowała znaku ?."
+    description: "Docs page text short.qr"
 inspect:
   title:
     value: Odczytaj metadane
@@ -42,6 +48,9 @@ inspect:
   info:
     value: Znak plus po identyfikatorze zwraca te same metadane. Identyfikatory używają cyfr i wielkich liter systemu base36. Zachowaj wielkość liter.
     description: Text shown in docs / inspect / info
+  lookup:
+    value: "Znajdź istniejący link repozytorium bez tworzenia go i bez zapytania do GitHuba. Brak linku zwraca 404 link_not_found."
+    description: "Docs page text inspect.lookup"
 resolve:
   title:
     value: Sprawdź cel przekierowania
@@ -118,3 +127,77 @@ status:
   '503':
     value: GitHub, Turnstile lub weryfikacja repozytorium są tymczasowo niedostępne.
     description: Text shown in docs / status / 503
+  '401':
+    value: "Token automatyzacji jest wymagany, nieznany albo unieważniony."
+    description: "Docs page text status.401"
+automation:
+  title:
+    value: "Tokeny automatyzacji"
+    description: "Docs page text automation.title"
+  text:
+    value: "Agenci i skrypty używają tokenu wydanego przez operatora zamiast sprawdzenia przeglądarki. Powtórzenie żądania zwraca ten sam link, więc ponawianie jest bezpieczne. Każda odpowiedź zawiera X-RateLimit-Limit, X-RateLimit-Remaining i X-RateLimit-Reset."
+    description: "Docs page text automation.text"
+  batch:
+    value: "Utwórz lub użyj ponownie do 25 repozytoriów w jednym żądaniu. Każdy wpis ma własny wynik lub błąd i kosztuje jedną jednostkę limitu."
+    description: "Docs page text automation.batch"
+  quota:
+    value: "Odczytaj dzisiejszy limit bez jego zużywania. Odpowiedź 429 quota_exceeded zawiera Retry-After do następnego dnia UTC."
+    description: "Docs page text automation.quota"
+assets:
+  title:
+    value: "Kody QR"
+    description: "Docs page text assets.title"
+  text:
+    value: "Renderuj ten sam kod QR co strona, bez przeglądarki, jako SVG, PNG lub JPG. Logo qr2g.it jest domyślnie włączone; logo=false je pomija. API renderuje też szablony presentation, poster, label i badge."
+    description: "Docs page text assets.text"
+  reliability:
+    value: "Kody mają margines czterech modułów i wymagają kontrastu co najmniej 4,5 między kodem a tłem; część starszych czytników odczytuje tylko ciemny kod na jasnym tle. Wygenerowany plik nie dowodzi, że każda drukarka czy aparat go odczyta; sprawdź gotowy wydruk."
+    description: "Docs page text assets.reliability"
+explore:
+  title:
+    value: "Widoczne repozytoria i statystyki"
+    description: "Docs page text explore.title"
+  text:
+    value: "Przeszukuj widoczne repozytoria ze stronicowaniem. Pojawiają się tylko publiczne repozytoria zgłoszone do qr2g.it, których właściciel nie zrezygnował."
+    description: "Docs page text explore.text"
+  stats:
+    value: "Odczytaj dzienne filtrowane przekierowania dla widocznego repozytorium. Nie obejmują żądań HEAD, rozpoznanych botów, podglądów ani ruchu API i nie są unikalnymi osobami."
+    description: "Docs page text explore.stats"
+  top:
+    value: "Najczęściej odwiedzane widoczne repozytoria z ostatnich 30 dni, z dziennymi licznikami, sumą i czasem ostatniego zliczonego przekierowania. Strona główna pokazuje trzy pierwsze."
+    description: "Docs page text explore.top"
+prefill:
+  title:
+    value: "Linki z gotowym wyglądem"
+    description: "Docs page text prefill.title"
+  text:
+    value: "Każdy czat lub dokument może prowadzić do qr2g.it z wypełnionym repozytorium i wyglądem. Otwarcie linku niczego nie tworzy; odwiedzający nadal klika Pobierz link."
+    description: "Docs page text prefill.text"
+  params:
+    value: "Parametry: repo, fg, bg, logo, ec, margin, radius, size, transparent i format. Odpowiadają endpointowi assetów. Nieznane lub błędne wartości są pomijane i wymienione na stronie."
+    description: "Docs page text prefill.params"
+  honest:
+    value: "Link z wyglądem nie jest krótkim linkiem. Nie wymyślaj identyfikatora i nie twierdź, że link istnieje, dopóki qr2g.it go nie pokaże."
+    description: "Docs page text prefill.honest"
+openapi:
+  value: "Kontrakt OpenAPI do odczytu maszynowego"
+  description: "Docs page text openapi"
+guide:
+  value: "Przewodnik w Markdown dla agentów i czatów"
+  description: "Docs page text guide"
+text:
+  title:
+    value: "Zwykły tekst"
+    description: "Docs section title"
+lookup:
+  title:
+    value: "Odczyt bez tworzenia"
+    description: "Docs section title"
+batch:
+  title:
+    value: "Wsadowo i limit"
+    description: "Docs section title"
+statuses:
+  title:
+    value: "Kody statusu"
+    description: "Docs section title"
