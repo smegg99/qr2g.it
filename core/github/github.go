@@ -27,10 +27,11 @@ func Initialize() error {
 			APIVersion:     cfg.APIVersion,
 			RESTBaseURL:    cfg.RESTBaseURL,
 			RequestTimeout: reqTimeout,
+			Token:          cfg.Token,
+			Reserve:        int(cfg.BackgroundReserve),
 		})
 
-		logger.Info().
-			Msg("github client ready")
+		logger.Info().Bool("authenticated", client.Authenticated()).Msg("github client ready")
 	})
 	return nil
 }

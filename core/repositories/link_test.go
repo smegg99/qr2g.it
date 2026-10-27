@@ -75,6 +75,20 @@ func TestSQLiteLinkLifecycle(t *testing.T) {
 	if n, err := r.CountActive(ctx); err != nil || n != 1 {
 		t.Fatalf("count: %d %v", n, err)
 	}
+	// A dead row with the same name never shadows the live one.
+	if _, err := r.ApplyTombstone(ctx, link.ID, TombstoneUpdate{State: models.StateUnavailable, Reason: "gone", Backoff: 60}); err != nil {
+		t.Fatal(err)
+	}
+	live, _, err := r.CreateOrGet(ctx, CreateLinkParams{NodeID: "other", DatabaseID: 99, FullName: "new/renamed", URL: "https://github.com/new/renamed", FreshTTL: 60})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got, err := r.GetByCurrentFullName(ctx, "new/renamed"); err != nil || got.ID != live.ID {
+		t.Fatalf("name lookup picked %d, want live %d (%v)", got.ID, live.ID, err)
+	}
+	if _, err := r.ApplySuccessfulVerification(ctx, link.ID, VerificationUpdate{NodeID: "node-new", FullName: "new/renamed", URL: "https://github.com/new/renamed", FreshTTL: 60, JitterRange: 1}); err != nil {
+		t.Fatal(err)
+	}
 	if err := db.Close(); err != nil {
 		t.Fatal(err)
 	}

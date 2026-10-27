@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
+	"sort"
 	"strconv"
 	"sync"
 	"time"
@@ -142,6 +143,10 @@ func (v *Verifier) Run(ctx context.Context) error {
 }
 
 func (v *Verifier) tick(ctx context.Context) error {
+	if !v.gh.BackgroundAllowed(time.Now()) {
+		logger.Debug().Msg("verifier tick skipped: github allowance reserved for requests")
+		return nil
+	}
 	links, err := v.links.ClaimStale(ctx, v.batchSize, v.leaseSeconds)
 	if err != nil {
 		return fmt.Errorf("claim stale: %w", err)
@@ -173,20 +178,17 @@ func (v *Verifier) tick(ctx context.Context) error {
 }
 
 // VerifyOnce coalesces concurrent verification of the same link id via
-// singleflight. The returned Link reflects the post-verification state (or
-// the original on failure).
+// singleflight. The returned Link reflects the stored state after the attempt,
+// including a tombstone recorded together with its cause.
 func (v *Verifier) VerifyOnce(ctx context.Context, l models.Link) (models.Link, error) {
 	key := strconv.FormatInt(l.ID, 10)
 	res, err, _ := v.sf.Do(key, func() (any, error) {
 		return v.verify(ctx, l)
 	})
-	if err != nil {
-		return l, err
+	if updated, ok := res.(models.Link); ok && updated.ID == l.ID {
+		return updated, err
 	}
-	if updated, ok := res.(models.Link); ok {
-		return updated, nil
-	}
-	return l, nil
+	return l, err
 }
 
 func (v *Verifier) verify(ctx context.Context, l models.Link) (models.Link, error) {
@@ -220,7 +222,7 @@ func (v *Verifier) verify(ctx context.Context, l models.Link) (models.Link, erro
 
 	case errors.Is(err, github.ErrNotFound):
 		v.breaker.OnSuccess()
-		return v.applyTombstoneOrFail(ctx, l, models.StateDeleted, "repository not found on github", err)
+		return v.applyTombstoneOrFail(ctx, l, models.StateUnavailable, "repository is no longer publicly available", err)
 
 	case errors.Is(err, github.ErrRateLimited),
 		errors.Is(err, github.ErrAuth),
@@ -247,12 +249,74 @@ func (v *Verifier) applySuccess(ctx context.Context, l models.Link, repo github.
 		URL:         repo.URL,
 		FreshTTL:    int(v.freshTTL.Seconds()),
 		JitterRange: int(v.jitter.Seconds()),
+		Metadata:    Metadata(repo),
 	})
 	if err != nil {
 		return l, fmt.Errorf("apply success: %w", err)
 	}
+	if v.gh.BackgroundAllowed(time.Now()) {
+		updated = v.RefreshLanguages(ctx, updated)
+	}
 	return updated, nil
 }
+
+// maxLanguages is how many of a repository's languages are kept; the rest is too small to show.
+const maxLanguages = 6
+
+// RefreshLanguages reads the repository's languages from GitHub and stores them. A failure keeps the
+// stored shares, since the colours they drive are decoration.
+func (v *Verifier) RefreshLanguages(ctx context.Context, l models.Link) models.Link {
+	bytes, err := v.gh.Languages(ctx, l.GithubDatabaseID)
+	if err != nil {
+		logger.Debug().Int64("link_id", l.ID).Err(err).Msg("languages not refreshed")
+		return l
+	}
+	shares := Shares(bytes)
+	if err := v.links.SetLanguages(ctx, l.ID, shares); err != nil {
+		logger.Warn().Int64("link_id", l.ID).Err(err).Msg("store languages failed")
+		return l
+	}
+	l.Languages = shares
+	return l
+}
+
+// Shares turns GitHub's bytes per language into the largest shares of the whole, largest first.
+func Shares(bytes map[string]int64) []models.LanguageShare {
+	var total int64
+	for _, n := range bytes {
+		total += max(n, 0)
+	}
+	out := make([]models.LanguageShare, 0, len(bytes))
+	if total == 0 {
+		return out
+	}
+	for name, n := range bytes {
+		if n > 0 {
+			out = append(out, models.LanguageShare{Name: name, Share: math.Round(float64(n)/float64(total)*1000) / 1000})
+		}
+	}
+	sort.Slice(out, func(i, j int) bool {
+		if out[i].Share != out[j].Share {
+			return out[i].Share > out[j].Share
+		}
+		return out[i].Name < out[j].Name
+	})
+	return out[:min(len(out), maxLanguages)]
+}
+
+// Metadata extracts the optional repository facts stored with a link.
+func Metadata(repo github.Repo) repositories.Metadata {
+	return repositories.Metadata{
+		Description:   repo.Description,
+		Language:      repo.Language,
+		Archived:      repo.Archived,
+		DefaultBranch: repo.DefaultBranch,
+		Stars:         repo.Stars,
+	}
+}
+
+// FreshTTL is how long a successful verification stays fresh.
+func (v *Verifier) FreshTTL() time.Duration { return v.freshTTL }
 
 func (v *Verifier) applyTombstoneOrFail(ctx context.Context, l models.Link, terminal models.State, reason string, cause error) (models.Link, error) {
 	if int(l.FailCount)+1 < v.maxFailCount {
